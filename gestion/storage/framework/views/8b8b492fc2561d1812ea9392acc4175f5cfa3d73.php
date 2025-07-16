@@ -1,0 +1,1 @@
+<input type='hidden' name="<?php echo e($name); ?>" value='<?php echo e($value); ?>'/><?php /**PATH /home/u923093801/domains/tuzonacomercial.com/public_html/sarov/vendor/crocodicstudio/crudbooster/src/views/default/type_components/hidden/component.blade.php ENDPATH**/ ?>

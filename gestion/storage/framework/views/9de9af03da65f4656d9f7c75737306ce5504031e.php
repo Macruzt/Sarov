@@ -1,0 +1,1 @@
+<?php echo nl2br($value); ?><?php /**PATH /home/u317647664/domains/gestionsarov.cloud/public_html/vendor/crocodicstudio/crudbooster/src/views/default/type_components/textarea/component_detail.blade.php ENDPATH**/ ?>

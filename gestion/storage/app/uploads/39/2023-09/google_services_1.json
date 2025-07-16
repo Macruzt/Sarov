@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "412173692505",
+    "firebase_url": "https://andresapp-bc657-default-rtdb.firebaseio.com",
+    "project_id": "andresapp-bc657",
+    "storage_bucket": "andresapp-bc657.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412173692505:android:51576901c7473d1b340b48",
+        "android_client_info": {
+          "package_name": "com.Andres.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhxmyxkg1Y-g0tgPxCrc4sucrgLETmx1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "412173692505-nnhb2go14qai7j9diseoang99ib9p0rj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "412173692505-1cbcl5mu9npu6ro62bj36arc13m8el93.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterApplicationCi2021"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

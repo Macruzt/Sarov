@@ -1,0 +1,14 @@
+ .container {
+            width: 80%; /* Ancho del contenedor principal */
+            margin: 0 auto; /* Centrar el contenedor en la página */
+            display: flex; /* Utilizar flexbox para las columnas */
+            justify-content: space-between; /* Espaciado entre las columnas */
+            padding: 20px; /* Espacio interno del contenedor */
+        }
+
+        /* Estilos para las columnas */
+        .column {
+            flex-basis: 48%; /* Ancho de cada columna (deja un 2% de espacio entre ellas) */
+            padding: 10px; /* Espacio interno de las columnas */
+            border: 1px solid #ccc; /* Borde para las columnas (opcional) */
+        }
