@@ -4,6 +4,11 @@ window.currentOrderId = null;
 window.isSigningActive = false;
 window.isMouseDown = false;
 
+// NUEVAS VARIABLES para manejo de dos firmas en órdenes
+window.currentOrderSignatureStep = 1; // 1 = firma de recepción, 2 = firma de cliente
+window.recepcionSignature = null; // Almacenar primera firma (recepción)
+window.clienteSignature = null;   // Almacenar segunda firma (cliente)
+
 // Función principal para abrir el modal
 async function openPDFModal(orderId) {
     // Validar orden ID
@@ -14,32 +19,10 @@ async function openPDFModal(orderId) {
 
     window.currentOrderId = orderId;
 
-    // Obtener datos del firmante del backend
-    try {
-        const response = await fetch(
-            "/admin/orders/" + orderId + "/signer-info"
-        );
-        const result = await response.json();
-
-        if (result.success && result.data) {
-            window.signerName =
-                result.data.signer_name || "Usuario del Sistema";
-            window.signerPosition =
-                result.data.signer_position || "Responsable";
-            window.signerCompany = result.data.signer_company || "SAROV";
-        } else {
-            console.warn(
-                "No se pudo cargar información del firmante, usando valores por defecto"
-            );
-            window.signerName = "Usuario del Sistema";
-            window.signerPosition = "Responsable";
-            window.signerCompany = "SAROV";
-        }
-    } catch (error) {
-        window.signerName = "Usuario del Sistema";
-        window.signerPosition = "Responsable";
-        window.signerCompany = "SAROV";
-    }
+    // Usar valores por defecto sin hacer peticiones al backend
+    window.signerName = "Usuario del Sistema";
+    window.signerPosition = "Responsable";
+    window.signerCompany = "SAROV";
 
     // Verificar dependencias
     if (!checkDependencies()) {
@@ -86,7 +69,8 @@ function checkDependencies() {
     if (missing.length > 0) {
         alert(
             "Error: Las siguientes librerías no están disponibles: " +
-                missing.join(", ")
+                missing.join(", ") + 
+                "\nVerifique que estén cargadas correctamente."
         );
         return false;
     }
@@ -104,6 +88,11 @@ function cleanupModal() {
     window.signaturePad = null;
     window.isSigningActive = false;
     window.isMouseDown = false;
+    
+    // RESETEAR variables de firma de órdenes
+    window.currentOrderSignatureStep = 1;
+    window.recepcionSignature = null;
+    window.clienteSignature = null;
 }
 
 // Configurar eventos del modal
@@ -134,9 +123,8 @@ function setupModalEvents() {
     });
 }
 
-// Función para crear el HTML del modal CORREGIDO
+// Función para crear el HTML del modal
 function createModalHTML(orderId) {
-    // Obtener la URL base de manera más robusta
     var baseUrl = getBaseUrl();
     var pdfUrl = baseUrl + "/admin/orders/" + orderId + "/view-pdf";
 
@@ -152,7 +140,7 @@ function createModalHTML(orderId) {
         '<div class="modal fade" id="pdfSignModal" tabindex="-1" role="dialog">' +
         '<div class="modal-dialog modal-lg" style="width: 95%; max-width: 1200px;">' +
         '<div class="modal-content">' +
-        '<div class="modal-header" style="background: linear-gradient(45deg, #28a745, #20c997); color: white;">' +
+        '<div class="modal-header" style="background: linear-gradient(45deg, #fba601, #FCC402); color: white;">' +
         '<h4 class="modal-title">' +
         '<i class="fa fa-file-signature"></i> ' +
         "Firmar Documento - Orden #" +
@@ -168,10 +156,10 @@ function createModalHTML(orderId) {
         '<i class="fa fa-spinner fa-spin fa-2x text-primary"></i>' +
         '<p class="mt-2">Cargando documento...</p>' +
         "</div>" +
-        "<!-- Contenido principal SIMPLIFICADO -->" +
+        "<!-- Contenido principal -->" +
         '<div id="main-content" style="display: none;">' +
         '<div class="row">' +
-        "<!-- Vista previa PDF (más grande) -->" +
+        "<!-- Vista previa PDF -->" +
         '<div class="col-md-8">' +
         '<div class="card">' +
         '<div class="card-header">' +
@@ -186,7 +174,7 @@ function createModalHTML(orderId) {
         'style="width: 100%; height: 100%; border: none;" ' +
         'onload="hideLoading()">' +
         "</iframe>" +
-        "<!-- Vista previa de firma (simplificada) -->" +
+        "<!-- Vista previa de firma -->" +
         '<div id="signature-preview" style="position: absolute; bottom: 20px; right: 20px; ' +
         "background: rgba(255,255,255,0.98); border: 2px solid #28a745; border-radius: 8px; " +
         'padding: 10px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">' +
@@ -202,7 +190,7 @@ function createModalHTML(orderId) {
         "</div>" +
         "</div>" +
         "</div>" +
-        "<!-- Panel derecho - SOLO FIRMA -->" +
+        "<!-- Panel de firma -->" +
         '<div class="col-md-4">' +
         '<div class="card">' +
         '<div class="card-header" style="background: #f8f9fa;">' +
@@ -212,16 +200,16 @@ function createModalHTML(orderId) {
         '<div class="alert alert-info" style="font-size: 12px; padding: 10px; margin-bottom: 15px;">' +
         '<i class="fa fa-info-circle"></i> Haga clic en "ACTIVAR FIRMA" para comenzar' +
         "</div>" +
-        "<!-- SOLO FECHA - automática -->" +
+        "<!-- Fecha automática -->" +
         '<div class="form-group">' +
         '<label><strong><i class="fa fa-calendar"></i> Fecha y Hora:</strong></label>' +
         '<input type="text" class="form-control" id="sign-date" readonly value="' +
         currentDate +
         '" style="background: #f8f9fa;">' +
         "</div>" +
-        "<!-- SOLO ÁREA DE FIRMA CORREGIDA -->" +
+        "<!-- Área de firma -->" +
         '<div class="form-group">' +
-        '<label><strong><i class="fa fa-signature"></i> Su Firma:</strong> <span class="text-danger">*</span></label>' +
+        '<label><strong><i class="fa fa-signature"></i> <span id="current-order-signature-label">Firma de recepción:</span></strong> <span class="text-danger">*</span></label>' +
         '<div id="signature-container" style="border: 2px dashed #28a745; background: #f8f9fa; border-radius: 8px; padding: 15px; text-align: center; position: relative;">' +
         '<canvas id="signature-pad" ' +
         'width="300" height="150" ' +
@@ -265,13 +253,13 @@ function createModalHTML(orderId) {
         "</button>" +
         "</div>" +
         "</div>" +
-        "<!-- Información que se usará automáticamente -->" +
+        "<!-- Información automática -->" +
         '<div class="mt-3">' +
-        '<small class="text-muted">' +
-        '<i class="fa fa-info-circle"></i> <strong>Información automática:</strong><br>' +
-        "• Nombre: Usuario del Sistema<br>" +
+        '<small class="text-muted" id="order-signature-step-info">' +
+        '<i class="fa fa-info-circle"></i> <strong>Paso 1 de 2:</strong><br>' +
+        "• Firmando como: Responsable de recepción<br>" +
         "• Empresa: SAROV<br>" +
-        "• Responsable de la orden" +
+        "• Después continuará con la firma del cliente" +
         "</small>" +
         "</div>" +
         "</div>" +
@@ -287,7 +275,7 @@ function createModalHTML(orderId) {
         '<button type="button" class="btn btn-success btn-lg" onclick="downloadSignedPDF(' +
         orderId +
         ')" style="margin-left: 10px;">' +
-        '<i class="fa fa-download"></i> Firmar y Descargar PDF' +
+        '<i class="fa fa-download"></i> Guardar PDF' +
         "</button>" +
         "</div>" +
         "</div>" +
@@ -296,17 +284,9 @@ function createModalHTML(orderId) {
     );
 }
 
-// Obtener URL base de manera robusta
+// Obtener URL base
 function getBaseUrl() {
-    var baseUrl = window.location.origin;
-    var path = window.location.pathname;
-
-    // Si estamos en una ruta de admin, mantener la estructura
-    if (path.includes("/admin/")) {
-        return baseUrl;
-    }
-
-    return baseUrl;
+    return window.location.origin;
 }
 
 // Ocultar indicador de carga
@@ -318,7 +298,7 @@ function hideLoading() {
     }, 500);
 }
 
-// Inicializar SignaturePad con MEJOR compatibilidad
+// Inicializar SignaturePad
 function initSignaturePad() {
     var canvas = document.getElementById("signature-pad");
     if (!canvas) {
@@ -327,31 +307,27 @@ function initSignaturePad() {
     }
 
     try {
-        // IMPORTANTE: Configurar dimensiones ANTES de crear SignaturePad
+        // Configurar dimensiones
         var rect = canvas.getBoundingClientRect();
         var computedStyle = getComputedStyle(canvas);
 
-        // Usar las dimensiones CSS como base
         var displayWidth = parseInt(computedStyle.width) || 300;
         var displayHeight = parseInt(computedStyle.height) || 150;
 
-        // Ajustar para dispositivos de alta resolución
         var ratio = Math.max(window.devicePixelRatio || 1, 1);
 
         canvas.width = displayWidth * ratio;
         canvas.height = displayHeight * ratio;
 
-        // Escalar el contexto para mantener nitidez
         var ctx = canvas.getContext("2d");
         ctx.scale(ratio, ratio);
 
-        // Establecer el CSS para que se vea del tamaño correcto
         canvas.style.width = displayWidth + "px";
         canvas.style.height = displayHeight + "px";
 
-        // Crear SignaturePad con configuración optimizada
+        // Crear SignaturePad
         window.signaturePad = new SignaturePad(canvas, {
-            backgroundColor: "rgba(255, 255, 255, 1)", // Fondo blanco sólido
+            backgroundColor: "rgba(255, 255, 255, 1)",
             penColor: "rgb(0, 0, 0)",
             velocityFilterWeight: 0.7,
             minWidth: 0.8,
@@ -363,12 +339,11 @@ function initSignaturePad() {
             },
         });
 
-        // Configurar estado inicial desactivado
+        // Desactivar inicialmente
         if (window.signaturePad.off) {
-            window.signaturePad.off(); // Desactivar SignaturePad inicialmente
+            window.signaturePad.off();
         }
         
-        // Configurar estado inicial
         $("#signature-status").text("Desactivado - Haga clic en 'Activar Firma'");
         window.isSigningActive = false;
 
@@ -377,8 +352,6 @@ function initSignaturePad() {
     }
 }
 
-// ✅ FUNCIONES PRINCIPALES DE CONTROL DE FIRMA
-
 // Activar el modo de firma
 function activateSignature() {
     if (!window.signaturePad) {
@@ -386,36 +359,30 @@ function activateSignature() {
         return;
     }
     
-    // Cambiar estado
     window.isSigningActive = true;
     
-    // Activar canvas
     var canvas = document.getElementById("signature-pad");
     if (!canvas) {
         alert("Error: Canvas no encontrado");
         return;
     }
     
-    // Configurar canvas para firma activa
+    // Configurar canvas activo
     canvas.style.cursor = "crosshair";
     canvas.style.background = "white";
     canvas.style.border = "2px solid #28a745";
     canvas.style.pointerEvents = "auto";
     canvas.removeAttribute("disabled");
     
-    // Ocultar overlay
+    // Cambiar interfaz
     $("#signature-overlay").hide();
-    
-    // Cambiar botones
     $("#activate-signature-btn").hide();
     $("#signature-controls").show();
     
-    // Actualizar instrucciones
     $("#signature-instructions").html(
         '<i class="fa fa-pencil text-success"></i> <strong>FIRMANDO:</strong> Mantenga presionado y dibuje. No salga del área hasta terminar.'
     );
     
-    // Actualizar estado
     $("#signature-status").text("✅ Activado - Listo para firmar");
     
     // Habilitar SignaturePad
@@ -423,35 +390,28 @@ function activateSignature() {
         window.signaturePad.on();
     }
     
-    // Configurar eventos de captura del mouse
     setupSignatureCapture(canvas);
     
-    // Mostrar mensaje de confirmación
     setTimeout(function() {
         $("#signature-instructions").append('<br><small style="color: #28a745;"><i class="fa fa-check"></i> Sistema activado - Puede comenzar a firmar</small>');
     }, 1000);
 }
 
-// Configurar captura del mouse para no salir del área
+// Configurar captura del mouse
 function setupSignatureCapture(canvas) {
-    
-    // Limpiar eventos anteriores
     canvas.removeEventListener('mousedown', handleMouseDown);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
     
-    // Agregar eventos nuevos
     canvas.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     
-    // Touch events
     canvas.addEventListener('touchstart', handleTouchStart);
     document.addEventListener('touchend', handleTouchEnd);
     document.addEventListener('touchmove', handleTouchMove);
 }
 
-// Manejadores de eventos separados para mejor control
 function handleMouseDown(e) {
     if (!window.isSigningActive) return;
     
@@ -469,13 +429,10 @@ function handleMouseMove(e) {
     var x = e.clientX;
     var y = e.clientY;
     
-    // Verificar si está fuera del área
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-        // Mantener dentro del área
         var constrainedX = Math.max(rect.left + 1, Math.min(rect.right - 1, x));
         var constrainedY = Math.max(rect.top + 1, Math.min(rect.bottom - 1, y));
         
-        // Crear evento sintético
         var syntheticEvent = new MouseEvent('mousemove', {
             clientX: constrainedX,
             clientY: constrainedY,
@@ -492,7 +449,6 @@ function handleMouseUp(e) {
     document.body.style.cursor = 'default';
     document.body.style.userSelect = 'auto';
     
-    // Mostrar mensaje de ayuda
     if (window.signaturePad && !window.signaturePad.isEmpty()) {
         $("#signature-instructions").html(
             '<i class="fa fa-check-circle text-success"></i> <strong>Trazo completado:</strong> Puede continuar firmando o presionar "Terminar" para revisar.'
@@ -516,35 +472,29 @@ function handleTouchMove(e) {
     e.preventDefault();
 }
 
-// Terminar la firma y mostrar resultado
+// Terminar la firma
 function finishSignature() {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
         alert("No hay firma para revisar. Por favor dibuje su firma primero.");
         return;
     }
     
-    // Desactivar firma
     window.isSigningActive = false;
     window.isMouseDown = false;
     
-    // Desactivar canvas
     var canvas = document.getElementById("signature-pad");
     canvas.style.cursor = "not-allowed";
     canvas.style.border = "2px solid #6c757d";
     canvas.setAttribute("disabled", true);
     
-    // Actualizar estado
     $("#signature-status").text("Firma completada - En revisión");
     
-    // Actualizar instrucciones
     $("#signature-instructions").html(
         '<i class="fa fa-eye text-info"></i> <strong>REVISIÓN:</strong> Examine su firma. Use "Vista Previa" para verla mejor o "Limpiar" para empezar de nuevo.'
     );
     
-    // Mostrar opciones de revisión
     $("#signature-controls").hide();
     
-    // Crear botones de revisión si no existen
     if ($("#review-controls").length === 0) {
         var reviewButtons = 
             '<div class="row mt-3" id="review-controls">' +
@@ -570,62 +520,114 @@ function finishSignature() {
     
     $("#review-controls").show();
     
-    // Automáticamente mostrar vista previa
     setTimeout(function() {
         previewSignature();
     }, 500);
 }
 
-// Reiniciar el proceso de firma
+// Reiniciar firma
 function restartSignature() {
     clearSignature();
     
-    // Mostrar botón de activar otra vez
     $("#activate-signature-btn").show();
     $("#signature-controls").hide();
     $("#review-controls").hide();
     
-    // Resetear canvas
     var canvas = document.getElementById("signature-pad");
     canvas.style.cursor = "not-allowed";
     canvas.style.background = "#f0f0f0";
     canvas.style.border = "2px solid #ccc";
     canvas.setAttribute("disabled", true);
     
-    // Mostrar overlay
     $("#signature-overlay").show();
     
-    // Resetear instrucciones
     $("#signature-instructions").html(
         '<i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> 1) Active la firma 2) Dibuje sin salir del área 3) Revise el resultado'
     );
     
-    $("#signature-status").text(" Desactivado");
+    $("#signature-status").text("Desactivado");
     window.isSigningActive = false;
     window.isMouseDown = false;
 }
 
-// Aprobar la firma
+// Aprobar firma - MODIFICADO para dos firmas
 function approveSignature() {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
         alert("No hay firma para aprobar.");
         return;
     }
     
-    // Cambiar estado final
-    $("#signature-status").text("Firma aprobada - Lista para usar");
-    $("#signature-instructions").html(
-        '<i class="fa fa-check-circle text-success"></i> <strong>APROBADA:</strong> Su firma ha sido aceptada. Puede proceder a firmar el documento.'
-    );
-    
-    // Ocultar controles de revisión
-    $("#review-controls").hide();
-    
-    // Opcional: Habilitar botón de descarga
-    $('button[onclick*="downloadSignedPDF"]').removeClass('disabled').prop('disabled', false);
+    if (window.currentOrderSignatureStep === 1) {
+        // Guardar primera firma (recepción) y pasar al siguiente paso
+        window.recepcionSignature = window.signaturePad.toDataURL("image/png");
+        
+        $("#signature-status").text("Firma de recepción completada - Preparando firma del cliente");
+        $("#signature-instructions").html(
+            '<i class="fa fa-check-circle text-success"></i> <strong>PRIMERA FIRMA COMPLETADA:</strong> Ahora procederá con la firma del cliente.'
+        );
+        
+        setTimeout(function() {
+            startClientSignature();
+        }, 2000);
+        
+    } else if (window.currentOrderSignatureStep === 2) {
+        // Guardar segunda firma (cliente) y finalizar
+        window.clienteSignature = window.signaturePad.toDataURL("image/png");
+        
+        $("#signature-status").text("Ambas firmas completadas - Listas para usar");
+        $("#signature-instructions").html(
+            '<i class="fa fa-check-circle text-success"></i> <strong>PROCESO COMPLETADO:</strong> Ambas firmas han sido capturadas. Puede proceder a descargar el documento firmado.'
+        );
+        
+        $("#review-controls").hide();
+        $('button[onclick*="downloadSignedPDF"]').removeClass('disabled').prop('disabled', false);
+    }
 }
 
-// Limpiar firma MEJORADO
+// Nueva función para iniciar la firma del cliente
+function startClientSignature() {
+    window.currentOrderSignatureStep = 2;
+    
+    // Limpiar el canvas para la segunda firma
+    if (window.signaturePad) {
+        window.signaturePad.clear();
+    }
+    
+    // Actualizar la interfaz para la segunda firma
+    $("#current-order-signature-label").text("Firma del cliente:");
+    $("#order-signature-step-info").html(
+        '<i class="fa fa-info-circle"></i> <strong>Paso 2 de 2:</strong><br>' +
+        "• Firmando como: Cliente/Responsable<br>" +
+        "• Quien recibe el equipo<br>" +
+        "• Última firma requerida"
+    );
+    
+    // Reiniciar el proceso de firma
+    $("#activate-signature-btn").show();
+    $("#signature-controls").hide();
+    $("#review-controls").hide();
+    
+    var canvas = document.getElementById("signature-pad");
+    canvas.style.cursor = "not-allowed";
+    canvas.style.background = "#f0f0f0";
+    canvas.style.border = "2px solid #ccc";
+    canvas.setAttribute("disabled", true);
+    
+    $("#signature-overlay").show();
+    
+    $("#signature-instructions").html(
+        '<i class="fa fa-info-circle"></i> <strong>Segunda firma:</strong> Active la firma para que el cliente pueda firmar el documento.'
+    );
+    
+    $("#signature-status").text("Esperando firma del cliente");
+    window.isSigningActive = false;
+    window.isMouseDown = false;
+    
+    // Cambiar el texto del botón de activación
+    $("#activate-signature-btn").html('<i class="fa fa-unlock"></i> ACTIVAR FIRMA DEL CLIENTE');
+}
+
+// Limpiar firma
 function clearSignature() {
     if (window.signaturePad) {
         window.signaturePad.clear();
@@ -644,7 +646,7 @@ function clearSignature() {
     }
 }
 
-// Vista previa de la firma SIMPLIFICADA
+// Vista previa de firma
 function previewSignature() {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
         alert("Por favor dibuje su firma primero");
@@ -660,159 +662,109 @@ function previewSignature() {
     }
 }
 
-// Guardar firma en el servidor (SIMPLIFICADO)
-async function saveSignature(orderId) {
-    if (!validateSignatureData()) {
-        return false;
-    }
-
-    try {
-        var signatureData = window.signaturePad.toDataURL("image/png");
-
-        // Datos automáticos - SIN formulario
-        var data = {
-            signature: signatureData,
-            signer_name: "Usuario del Sistema",
-            signer_position: "Responsable",
-            signer_company: "SAROV",
-            sign_date: $("#sign-date").val(),
-            _token: getCSRFToken(),
-        };
-
-        var response = await fetch("/admin/orders/save-signature/" + orderId, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": getCSRFToken(),
-            },
-            body: JSON.stringify(data),
-        });
-
-        if (!response.ok) {
-            throw new Error("Error del servidor: " + response.status);
-        }
-
-        var result = await response.json();
-
-        if (result.success) {
-            return true;
-        } else {
-            throw new Error(result.message || "Error desconocido");
-        }
-    } catch (error) {
-        alert("Error al guardar la firma: " + error.message);
-        return false;
-    }
-}
-
-// Descargar PDF firmado SIMPLIFICADO
+// Descargar PDF firmado - MODIFICADO para dos firmas
 async function downloadSignedPDF(orderId) {
-    if (!validateSignatureData()) {
+    // Validar que ambas firmas estén completas
+    if (!window.recepcionSignature || !window.clienteSignature) {
+        alert("Debe completar ambas firmas antes de descargar el documento");
         return;
     }
 
-    var downloadBtn = $(
-        'button[onclick*="downloadSignedPDF(' + orderId + ')"]'
-    );
+    var downloadBtn = $('button[onclick*="downloadSignedPDF(' + orderId + ')"]');
     var originalText = downloadBtn.html();
     downloadBtn
         .html('<i class="fa fa-spinner fa-spin"></i> Procesando PDF...')
         .prop("disabled", true);
 
     try {
-        // Primero guardar la firma
-        var saved = await saveSignature(orderId);
-        if (!saved) {
-            throw new Error("No se pudo guardar la firma");
-        }
-
         var baseUrl = getBaseUrl();
-        var pdfUrl = baseUrl + "/admin/orders/" + orderId + "/view-pdf";
+        var pdfUrl = baseUrl + "/admin/orders/" + orderId + "/pdf";
 
         var response = await fetch(pdfUrl);
         if (!response.ok) {
-            throw new Error(
-                "No se pudo cargar el PDF original (Error: " +
-                    response.status +
-                    ")"
-            );
+            throw new Error("No se pudo cargar el PDF original (Error: " + response.status + ")");
         }
 
         var existingPdfBytes = await response.arrayBuffer();
         var pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         var pages = pdfDoc.getPages();
-        var firstPage = pages[0];
+        var firstPage = pages[1];
         var pageSize = firstPage.getSize();
         var width = pageSize.width;
         var height = pageSize.height;
 
-        // Procesar imagen de firma
-        var signatureDataURL = window.signaturePad.toDataURL("image/png");
-        var signatureResponse = await fetch(signatureDataURL);
-        var signatureImageBytes = await signatureResponse.arrayBuffer();
-        var signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+        // Procesar PRIMERA firma (recepción)
+        var recepcionResponse = await fetch(window.recepcionSignature);
+        var recepcionImageBytes = await recepcionResponse.arrayBuffer();
+        var recepcionImage = await pdfDoc.embedPng(recepcionImageBytes);
 
-        // Posicionar firma en el PDF
-        var signatureWidth = 140;
-        var signatureHeight = 60;
-        var signatureX = width - signatureWidth - 40;
-        var signatureY = 80;
+        // Procesar SEGUNDA firma (cliente)
+        var clienteResponse = await fetch(window.clienteSignature);
+        var clienteImageBytes = await clienteResponse.arrayBuffer();
+        var clienteImage = await pdfDoc.embedPng(clienteImageBytes);
 
-        firstPage.drawImage(signatureImage, {
-            x: signatureX,
-            y: signatureY,
+        // Posicionar firma de RECEPCIÓN (lado izquierdo)
+        var signatureWidth = 100;
+        var signatureHeight = 40;
+        var recepcionX = 80; // Lado izquierdo
+        var recepcionY = 650;
+
+        firstPage.drawImage(recepcionImage, {
+            x: recepcionX,
+            y: recepcionY,
             width: signatureWidth,
             height: signatureHeight,
         });
 
-        // Agregar información AUTOMÁTICA
-        var fontSize = 9;
-        var textY = signatureY - 15;
+        // Posicionar firma de CLIENTE (lado derecho)
+        var signatureWidth = 100;
+        var signatureHeight = 40;
+        var clienteX = 90; // Lado derecho
+        var clienteY = 450;
 
-        firstPage.drawText(window.signerName || "Usuario del Sistema", {
-            x: signatureX,
-            y: textY - 12,
+        firstPage.drawImage(clienteImage, {
+            x: clienteX,
+            y: clienteY,
+            width: signatureWidth,
+            height: signatureHeight,
+        });
+
+        // Agregar información de firmantes
+        var fontSize = 8;
+        
+        // Texto para firma de recepción
+        firstPage.drawText("Firma de Recepción - SAROV", {
+            x: recepcionX,
+            y: recepcionY - 12,
             size: fontSize,
             color: PDFLib.rgb(0, 0, 0),
         });
 
-        firstPage.drawText("Empresa: " + (window.signerCompany || "SAROV"), {
-            x: signatureX,
-            y: textY - 24,
-            size: fontSize - 1,
-            color: PDFLib.rgb(0.2, 0.2, 0.2),
+        // Texto para firma del cliente
+        firstPage.drawText("Firma del Cliente", {
+            x: clienteX,
+            y: clienteY - 12,
+            size: fontSize,
+            color: PDFLib.rgb(0, 0, 0),
         });
 
-        firstPage.drawText(window.signerPosition || "Responsable", {
-            x: signatureX,
-            y: textY - 18,
-            size: fontSize - 1,
-            color: PDFLib.rgb(0.2, 0.2, 0.2),
-        });
-
-        // Generar y descargar PDF
+        // Descargar PDF
         var pdfBytes = await pdfDoc.save();
         var blob = new Blob([pdfBytes], { type: "application/pdf" });
         var url = URL.createObjectURL(blob);
 
         var a = document.createElement("a");
         a.href = url;
-        a.download =
-            "Orden_" +
-            orderId +
-            "_Firmada_" +
-            new Date().toISOString().split("T")[0] +
-            ".pdf";
+        a.download = "Orden_" + orderId + "_Firmada_" + new Date().toISOString().split("T")[0] + ".pdf";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // Cerrar modal
         $("#pdfSignModal").modal("hide");
 
         setTimeout(function () {
-            alert("PDF firmado descargado correctamente");
+            alert("Documento con ambas firmas descargado correctamente");
         }, 500);
     } catch (error) {
         alert("Error al procesar el PDF: " + error.message);
@@ -821,7 +773,7 @@ async function downloadSignedPDF(orderId) {
     }
 }
 
-// Validar datos de firma SIMPLIFICADO
+// Validar datos de firma
 function validateSignatureData() {
     if (!window.signaturePad || window.signaturePad.isEmpty()) {
         alert("Por favor dibuje su firma antes de continuar");
@@ -839,10 +791,8 @@ function getCSRFToken() {
     return token || "";
 }
 
-// Event listeners para mejorar la experiencia
+// Inicialización
 $(document).ready(function () {
-
-    // Verificar dependencias al cargar
     setTimeout(function () {
         checkDependencies();
     }, 1000);

@@ -394,7 +394,7 @@
                 <strong>ID</strong><br>
                 {{ $reportdata->id_resp_recep ?? 'N/A' }}<br>
                 <div class="signature-line"></div>
-                <strong>Firma</strong><br>
+                <strong>Firma</strong><br><br><br>
                 <div class="signature-line"></div>
             </div>
             
@@ -406,7 +406,7 @@
                 <strong>ID</strong><br>
                 {{ $reportdata->id_resp_cliente ?? 'N/A' }}<br>
                 <div class="signature-line"></div>
-                <strong>Firma</strong><br>
+                <strong>Firma</strong><br><br><br>
                 <div class="signature-line"></div>
             </div>
         </div>
