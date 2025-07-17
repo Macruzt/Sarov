@@ -381,6 +381,74 @@
 		    }
 		}
 
+		// ====================================================================
+		// MÉTODO PARA GUARDAR PDF FIRMADO DEL ACTA EN BASE DE DATOS
+		// ====================================================================
+		
+		// Método para guardar PDF firmado del acta en la base de datos
+		public function saveSignedActaPDF($id)
+		{
+		    try {
+		        $input = Request::all();
+		        
+		        // Validar que se recibió el archivo PDF
+		        if (!Request::hasFile('signed_pdf')) {
+		            return response()->json([
+		                'success' => false,
+		                'message' => 'No se recibió el archivo PDF firmado del acta'
+		            ], 400);
+		        }
+		        
+		        $file = Request::file('signed_pdf');
+		        $actaId = $input['acta_id'];
+		        
+		        // Verificar que el acta existe y obtener el order_id
+		        $acta = DB::table('actas')->where('id', $id)->first();
+		        if (!$acta) {
+		            return response()->json([
+		                'success' => false,
+		                'message' => 'Acta no encontrada'
+		            ], 404);
+		        }
+		        
+		        $orderId = $acta->orderid; // El campo que conecta acta con orden
+		        
+		        // Generar nombre único para el archivo
+		        $fileName = 'delivery_signed_' . $orderId . '_' . time() . '.pdf';
+		        
+		        // Guardar archivo en storage/app/public/signed_pdfs
+		        $filePath = $file->storeAs('signed_pdfs', $fileName, 'public');
+		        
+		        // Insertar o actualizar en service_order_documents
+		        DB::table('service_order_documents')->updateOrInsert(
+		            ['order_id' => $orderId],
+		            [
+		                'delivery_signed' => $filePath,
+		                'updated_at' => now()
+		            ]
+		        );
+		        
+		        return response()->json([
+		            'success' => true,
+		            'message' => 'Acta firmada guardada correctamente',
+		            'data' => [
+		                'acta_id' => $actaId,
+		                'order_id' => $orderId,
+		                'file_path' => $filePath,
+		                'saved_at' => now()->format('Y-m-d H:i:s')
+		            ]
+		        ]);
+		        
+		    } catch (\Exception $e) {
+		        \Log::error('Error al guardar acta firmada: ' . $e->getMessage());
+		        
+		        return response()->json([
+		            'success' => false,
+		            'message' => 'Error al guardar acta: ' . $e->getMessage()
+		        ], 500);
+		    }
+		}
+
 	    /*
 	    | ---------------------------------------------------------------------- 
 	    | Hook for button selected

@@ -99,7 +99,7 @@
             <tr>
                 <td width="50%">
                     <b style="background-color: #ffc000;">QUIEN ENTREGA:</b>
-                    <br>
+                    <br><br><br>
                     <b>Firma</b>
                     <br>
                     ...................................
@@ -118,7 +118,7 @@
                 </td>
                 <td width="50%">
                     <b style="background-color: #ffc000;margin-right: 90px;">QUIEN RECIBE:</b>
-                    <br>
+                    <br><br><br>
                     <b>Firma</b>
                     <br>
                     ....................................

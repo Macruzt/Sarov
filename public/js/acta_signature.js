@@ -140,7 +140,7 @@ function createActaModalHTML(actaId) {
         '<div class="modal fade" id="actaPdfSignModal" tabindex="-1" role="dialog">' +
         '<div class="modal-dialog modal-lg" style="width: 95%; max-width: 1200px;">' +
         '<div class="modal-content">' +
-        '<div class="modal-header" style="background: linear-gradient(45deg, #dc3545, #fd7e14); color: white;">' +
+        '<div class="modal-header" style="background: linear-gradient(45deg, #fba601, #FCC402); color: white;">' +
         '<h4 class="modal-title">' +
         '<i class="fa fa-file-signature"></i> ' +
         "Firmar Acta de Entrega - ID #" +
@@ -275,7 +275,7 @@ function createActaModalHTML(actaId) {
         '<button type="button" class="btn btn-danger btn-lg" onclick="downloadSignedActaPDF(' +
         actaId +
         ')" style="margin-left: 10px;">' +
-        '<i class="fa fa-download"></i> Firmar y Descargar Acta' +
+        '<i class="fa fa-download"></i> Guardar Acta' +
         "</button>" +
         "</div>" +
         "</div>" +
@@ -688,7 +688,7 @@ async function downloadSignedActaPDF(actaId) {
         var existingPdfBytes = await response.arrayBuffer();
         var pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         var pages = pdfDoc.getPages();
-        var firstPage = pages[0];
+        var firstPage = pages[1];
         var pageSize = firstPage.getSize();
         var width = pageSize.width;
         var height = pageSize.height;
@@ -706,8 +706,8 @@ async function downloadSignedActaPDF(actaId) {
         // Posicionar firma de QUIEN ENTREGA (lado izquierdo)
         var signatureWidth = 100;
         var signatureHeight = 40;
-        var entregaX = 60; // Lado izquierdo
-        var entregaY = 180;
+        var entregaX = 85; // Lado izquierdo
+        var entregaY = 729;
 
         firstPage.drawImage(entregaImage, {
             x: entregaX,
@@ -717,8 +717,8 @@ async function downloadSignedActaPDF(actaId) {
         });
 
         // Posicionar firma de QUIEN RECIBE (lado derecho)
-        var recibeX = width - signatureWidth - 60; // Lado derecho
-        var recibeY = 180;
+        var recibeX = width - signatureWidth - 90; // Lado derecho
+        var recibeY = 729;
 
         firstPage.drawImage(recibeImage, {
             x: recibeX,
