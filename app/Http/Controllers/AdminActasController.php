@@ -1,56 +1,60 @@
-<?php namespace App\Http\Controllers;
+<?php
 
-	use Session;
-	use Request;
-	use DB;
-	use PDF;
-	use CRUDBooster;
+namespace App\Http\Controllers;
 
-	class AdminActasController extends \crocodicstudio\crudbooster\controllers\CBController {
+use Session;
+use Request;
+use DB;
+use PDF;
+use CRUDBooster;
 
-	    public function cbInit() {
+class AdminActasController extends \crocodicstudio\crudbooster\controllers\CBController
+{
 
-			# START CONFIGURATION DO NOT REMOVE THIS LINE
-			$this->title_field = "id";
-			$this->limit = "20";
-			$this->orderby = "id,asc";
-			$this->global_privilege = false;
-			$this->button_table_action = true;
-			$this->button_bulk_action = true;
-			$this->button_action_style = "button_icon";
-			$this->button_add = true;
-			$this->button_edit = true;
-			$this->button_delete = true;
-			$this->button_detail = true;
-			$this->button_show = true;
-			$this->button_filter = true;
-			$this->button_import = false;
-			$this->button_export = false;
-			$this->table = "actas";
-			# END CONFIGURATION DO NOT REMOVE THIS LINE
+	public function cbInit()
+	{
 
-			# START COLUMNS DO NOT REMOVE THIS LINE
-			$this->col = [];
-			$this->col[] = ["label"=>"Nombre Entrega","name"=>"nombre_e"];
-			$this->col[] = ["label"=>"Cedula Entrega","name"=>"cedula_e"];
-			$this->col[] = ["label"=>"Nombre Recibe","name"=>"nombre_r"];
-			$this->col[] = ["label"=>"Cedula Recibe","name"=>"cedula_r"];
-			# END COLUMNS DO NOT REMOVE THIS LINE
+		# START CONFIGURATION DO NOT REMOVE THIS LINE
+		$this->title_field = "id";
+		$this->limit = "20";
+		$this->orderby = "id,asc";
+		$this->global_privilege = false;
+		$this->button_table_action = true;
+		$this->button_bulk_action = true;
+		$this->button_action_style = "button_icon";
+		$this->button_add = true;
+		$this->button_edit = true;
+		$this->button_delete = true;
+		$this->button_detail = true;
+		$this->button_show = true;
+		$this->button_filter = true;
+		$this->button_import = false;
+		$this->button_export = false;
+		$this->table = "actas";
+		# END CONFIGURATION DO NOT REMOVE THIS LINE
 
-			# START FORM DO NOT REMOVE THIS LINE
-			$this->form = [];
-			$this->form[] = ['label'=>'Order Id','name'=>'orderid','type'=>'text','validation'=>'required','datatable'=>'orders,id','readonly'=>true,'width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Fecha Salida','name'=>'fecha_salida','type'=>'date','validation'=>'required','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Firma Entrega','name'=>'firma_e','type'=>'text','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Nombre Entrega','name'=>'nombre_e','type'=>'text','validation'=>'required','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Cedula Entrega','name'=>'cedula_e','type'=>'text','validation'=>'required','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Firma Recibe','name'=>'firma_r','type'=>'text','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Nombre Recibe','name'=>'nombre_r','type'=>'text','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Cedula Recibe','name'=>'cedula_r','type'=>'text','width'=>'col-sm-8'];
-			$this->form[] = ['label'=>'Observaciones','name'=>'observaciones','type'=>'textarea','validation'=>'required','width'=>'col-sm-8'];
-			# END FORM DO NOT REMOVE THIS LINE
+		# START COLUMNS DO NOT REMOVE THIS LINE
+		$this->col = [];
+		$this->col[] = ["label" => "Nombre Entrega", "name" => "nombre_e"];
+		$this->col[] = ["label" => "Cedula Entrega", "name" => "cedula_e"];
+		$this->col[] = ["label" => "Nombre Recibe", "name" => "nombre_r"];
+		$this->col[] = ["label" => "Cedula Recibe", "name" => "cedula_r"];
+		# END COLUMNS DO NOT REMOVE THIS LINE
 
-			/* 
+		# START FORM DO NOT REMOVE THIS LINE
+		$this->form = [];
+		$this->form[] = ['label' => 'Order Id', 'name' => 'orderid', 'type' => 'text', 'validation' => 'required', 'datatable' => 'orders,id', 'readonly' => true, 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Fecha Salida', 'name' => 'fecha_salida', 'type' => 'date', 'validation' => 'required', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Firma Entrega', 'name' => 'firma_e', 'type' => 'text', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Nombre Entrega', 'name' => 'nombre_e', 'type' => 'text', 'validation' => 'required', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Cedula Entrega', 'name' => 'cedula_e', 'type' => 'text', 'validation' => 'required', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Firma Recibe', 'name' => 'firma_r', 'type' => 'text', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Nombre Recibe', 'name' => 'nombre_r', 'type' => 'text', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Cedula Recibe', 'name' => 'cedula_r', 'type' => 'text', 'width' => 'col-sm-8'];
+		$this->form[] = ['label' => 'Observaciones', 'name' => 'observaciones', 'type' => 'textarea', 'validation' => 'required', 'width' => 'col-sm-8'];
+		# END FORM DO NOT REMOVE THIS LINE
+
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Sub Module
 	        | ----------------------------------------------------------------------     
@@ -62,9 +66,9 @@
 			| @parent_columns = Sparate with comma, e.g : name,created_at
 	        | 
 	        */
-	        $this->sub_module = array();
+		$this->sub_module = array();
 
-	        /* 
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Add More Action Button / Menu
 	        | ----------------------------------------------------------------------     
@@ -75,17 +79,17 @@
 	        | @showIf 	   = If condition when action show. Use field alias. e.g : [id] == 1
 	        | 
 	        */
-	        $this->addaction = array();
-	        
-	        // Botón para firmar acta de entrega (reemplaza el original)
-	        $this->addaction[] = [
-				'label'=>'Firmar acta de entrega',
-				'url'=>'javascript:openActaPDFModal([id])',
-				'icon'=>'fa fa-signature',
-				'color'=>'info'
-			];
+		$this->addaction = array();
 
-	        /* 
+		// Botón para firmar acta de entrega
+		$this->addaction[] = [
+			'label' => 'Firmar acta de entrega',
+			'url' => 'javascript:openActaPDFModal([id])',
+			'icon' => 'fa fa-signature',
+			'color' => 'info'
+		];
+
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Add More Button Selected
 	        | ----------------------------------------------------------------------     
@@ -95,9 +99,9 @@
 	        | Then about the action, you should code at actionButtonSelected method 
 	        | 
 	        */
-	        $this->button_selected = array();
+		$this->button_selected = array();
 
-	        /* 
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Add alert message to this module at overheader
 	        | ----------------------------------------------------------------------     
@@ -105,9 +109,9 @@
 	        | @type    = warning,success,danger,info        
 	        | 
 	        */
-	        $this->alert        = array();
+		$this->alert        = array();
 
-	        /* 
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Add more button to header button 
 	        | ----------------------------------------------------------------------     
@@ -116,9 +120,9 @@
 	        | @icon  = Icon from Awesome.
 	        | 
 	        */
-	        $this->index_button = array();
+		$this->index_button = array();
 
-	        /* 
+		/* 
 	        | ---------------------------------------------------------------------- 
 	        | Customize Table Row Color
 	        | ----------------------------------------------------------------------     
@@ -126,18 +130,18 @@
 	        | @color = Default is none. You can use bootstrap success,info,warning,danger,primary.        
 	        | 
 	        */
-	        $this->table_row_color = array();     	          
+		$this->table_row_color = array();
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | You may use this bellow array to add statistic at dashboard 
 	        | ---------------------------------------------------------------------- 
 	        | @label, @count, @icon, @color 
 	        |
 	        */
-	        $this->index_statistic = array();
+		$this->index_statistic = array();
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Add javascript at body 
 	        | ---------------------------------------------------------------------- 
@@ -145,9 +149,9 @@
 	        | $this->script_js = "function() { ... }";
 	        |
 	        */
-	        $this->script_js = NULL;
+		$this->script_js = NULL;
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Include HTML Code before index table 
 	        | ---------------------------------------------------------------------- 
@@ -155,9 +159,9 @@
 	        | $this->pre_index_html = "<p>test</p>";
 	        |
 	        */
-	        $this->pre_index_html = null;
+		$this->pre_index_html = null;
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Include HTML Code after index table 
 	        | ---------------------------------------------------------------------- 
@@ -165,9 +169,9 @@
 	        | $this->post_index_html = "<p>test</p>";
 	        |
 	        */
-	        $this->post_index_html = null;
+		$this->post_index_html = null;
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Include Javascript File 
 	        | ---------------------------------------------------------------------- 
@@ -175,13 +179,12 @@
 	        | $this->load_js[] = asset("myfile.js");
 	        |
 	        */
-	        $this->load_js = array();
-	        // NUEVO: Agregar librerías necesarias para la firma digital
-	        $this->load_js[] = "https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js";
-	        $this->load_js[] = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
-	        $this->load_js[] = asset("js/acta_signature.js"); // Archivo JS para firma de actas
+		$this->load_js = array();
+		$this->load_js[] = "https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js";
+		$this->load_js[] = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+		$this->load_js[] = asset("js/acta_signature.js");
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Add css style at body 
 	        | ---------------------------------------------------------------------- 
@@ -189,14 +192,14 @@
 	        | $this->style_css = ".style{....}";
 	        |
 	        */
-	        $this->style_css = "
+		$this->style_css = "
 			#actaPdfSignModal .modal-lg { max-width: 90% !important; }
 			#actaPdfSignModal .modal-content { max-height: 95vh; }
 			#acta-signature-pad { touch-action: none; background: white; }
 			.modal-backdrop.in { opacity: 0.5 !important; }
 		";
 
-	        /*
+		/*
 	        | ---------------------------------------------------------------------- 
 	        | Include css File 
 	        | ---------------------------------------------------------------------- 
@@ -204,252 +207,287 @@
 	        | $this->load_css[] = asset("myfile.css");
 	        |
 	        */
-	        $this->load_css = array();
-	    }
-	    
-	    // MÉTODO ORIGINAL - Descarga directa del PDF
-	    public function actasPDF($id) {
-			// retreive all records from db
+		$this->load_css = array();
+	}
+
+	public function actasPDF($id)
+	{
+		$data = DB::table('actas')
+			->join('orders', 'orders.id', '=', 'actas.orderid')
+			->join('customers', 'customers.id', '=', 'orders.id_customer')
+			->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
+			->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
+			->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'customers.name as customer', 'actas.nombre_e', 'actas.cedula_e', 'actas.nombre_r', 'actas.cedula_r', 'actas.observaciones as observacion', 'actas.fecha_salida')
+			->where('actas.id', $id)
+			->get();
+
+		$pdf = PDF::loadView('actas', compact('data'));
+		return $pdf->download('acta de entrega.pdf');
+	}
+
+	public function viewActaPDF($id)
+	{
+		try {
 			$data = DB::table('actas')
-            ->join('orders', 'orders.id', '=', 'actas.orderid')
-            ->join('customers', 'customers.id', '=', 'orders.id_customer')
-            ->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
-            ->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
-            ->select('orders.*', 'equipos.placa','equipos.tipo_equipo','equipos.descripcion','equipos.referencia','equipos.marca','equipos.modelo','equipos.linea','equipos.combustible','equipos.potencia','equipos.interno_equipo','equipos.numero_serie','orders.kms_hrs','customers.name as customer','actas.nombre_e','actas.cedula_e','actas.nombre_r','actas.cedula_r','actas.observaciones as observacion','actas.fecha_salida' )->where('actas.id',$id)->get();
-		    // share data to view
+				->join('orders', 'orders.id', '=', 'actas.orderid')
+				->join('customers', 'customers.id', '=', 'orders.id_customer')
+				->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
+				->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
+				->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'customers.name as customer', 'actas.nombre_e', 'actas.cedula_e', 'actas.nombre_r', 'actas.cedula_r', 'actas.observaciones as observacion', 'actas.fecha_salida')
+				->where('actas.id', $id)
+				->get();
+
+			if ($data->isEmpty()) {
+				return abort(404, 'Acta no encontrada');
+			}
+
 			$pdf = PDF::loadView('actas', compact('data'));
-			// download PDF file with download method
-			return $pdf->download('acta de entrega.pdf');
+			$pdf->setPaper('A4', 'portrait');
+
+			return $pdf->stream('acta-entrega-' . $id . '.pdf');
+		} catch (\Exception $e) {
+			\Log::error('Error al mostrar PDF del acta: ' . $e->getMessage());
+			return abort(500, 'Error al generar el PDF del acta');
 		}
-		
-		// ====================================================================
-		// NUEVOS MÉTODOS PARA FIRMA DIGITAL DEL ACTA
-		// ====================================================================
-		
-		// Mostrar PDF del acta en línea para vista previa
-		public function viewActaPDF($id)
-		{
-		    try {
-		        $data = DB::table('actas')
-		            ->join('orders', 'orders.id', '=', 'actas.orderid')
-		            ->join('customers', 'customers.id', '=', 'orders.id_customer')
-		            ->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
-		            ->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
-		            ->select('orders.*', 'equipos.placa','equipos.tipo_equipo','equipos.descripcion','equipos.referencia','equipos.marca','equipos.modelo','equipos.linea','equipos.combustible','equipos.potencia','equipos.interno_equipo','equipos.numero_serie','orders.kms_hrs','customers.name as customer','actas.nombre_e','actas.cedula_e','actas.nombre_r','actas.cedula_r','actas.observaciones as observacion','actas.fecha_salida' )
-		            ->where('actas.id', $id)
-		            ->get();
+	}
 
-		        if ($data->isEmpty()) {
-		            return abort(404, 'Acta no encontrada');
-		        }
+	public function getActaPDF($id)
+	{
+		try {
+			$data = DB::table('actas')
+				->join('orders', 'orders.id', '=', 'actas.orderid')
+				->join('customers', 'customers.id', '=', 'orders.id_customer')
+				->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
+				->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
+				->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'customers.name as customer', 'actas.nombre_e', 'actas.cedula_e', 'actas.nombre_r', 'actas.cedula_r', 'actas.observaciones as observacion', 'actas.fecha_salida')
+				->where('actas.id', $id)
+				->get();
 
-		        $pdf = PDF::loadView('actas', compact('data'));
-		        $pdf->setPaper('A4', 'portrait');
+			if ($data->isEmpty()) {
+				return response()->json(['error' => 'Acta no encontrada'], 404);
+			}
 
-		        return $pdf->stream('acta-entrega-' . $id . '.pdf');
-		        
-		    } catch (\Exception $e) {
-		        \Log::error('Error al mostrar PDF del acta: ' . $e->getMessage());
-		        return abort(500, 'Error al generar el PDF del acta');
-		    }
+			$pdf = PDF::loadView('actas', compact('data'));
+			$pdf->setPaper('A4', 'portrait');
+
+			return response($pdf->output(), 200, [
+				'Content-Type' => 'application/pdf',
+				'Content-Disposition' => 'inline; filename="acta-' . $id . '.pdf"'
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al obtener PDF del acta: ' . $e->getMessage());
+			return response()->json(['error' => 'Error al cargar el PDF'], 500);
 		}
-		
-		// Obtener PDF del acta para descarga/firma
-		public function getActaPDF($id)
-		{
-		    try {
-		        $data = DB::table('actas')
-		            ->join('orders', 'orders.id', '=', 'actas.orderid')
-		            ->join('customers', 'customers.id', '=', 'orders.id_customer')
-		            ->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
-		            ->join('equipos', 'equipos.id', '=', 'orders.id_equipo')
-		            ->select('orders.*', 'equipos.placa','equipos.tipo_equipo','equipos.descripcion','equipos.referencia','equipos.marca','equipos.modelo','equipos.linea','equipos.combustible','equipos.potencia','equipos.interno_equipo','equipos.numero_serie','orders.kms_hrs','customers.name as customer','actas.nombre_e','actas.cedula_e','actas.nombre_r','actas.cedula_r','actas.observaciones as observacion','actas.fecha_salida' )
-		            ->where('actas.id', $id)
-		            ->get();
+	}
 
-		        if ($data->isEmpty()) {
-		            return response()->json(['error' => 'Acta no encontrada'], 404);
-		        }
+	public function saveActaSignature($id)
+	{
+		try {
+			$input = Request::all();
 
-		        $pdf = PDF::loadView('actas', compact('data'));
-		        $pdf->setPaper('A4', 'portrait');
+			$validator = \Validator::make($input, [
+				'signature' => 'required|string',
+				'signer_name' => 'required|string|min:3|max:100',
+				'signer_position' => 'nullable|string|max:100',
+				'signer_company' => 'nullable|string|max:100'
+			]);
 
-		        return $pdf->download('acta-entrega-' . $id . '.pdf');
-		        
-		    } catch (\Exception $e) {
-		        \Log::error('Error al obtener PDF del acta: ' . $e->getMessage());
-		        return response()->json(['error' => 'Error al cargar el PDF'], 500);
-		    }
+			if ($validator->fails()) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Datos inválidos: ' . $validator->errors()->first()
+				], 400);
+			}
+
+			$acta = DB::table('actas')->where('id', $id)->first();
+			if (!$acta) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Acta no encontrada'
+				], 404);
+			}
+
+			$updateData = [
+				'signature_data' => $input['signature'],
+				'signer_name' => trim($input['signer_name']),
+				'signer_position' => trim($input['signer_position'] ?? ''),
+				'signer_company' => trim($input['signer_company'] ?? ''),
+				'signed_at' => now(),
+				'signature_ip' => Request::ip(),
+				'updated_at' => now()
+			];
+
+			$updated = DB::table('actas')->where('id', $id)->update($updateData);
+
+			if (!$updated) {
+				throw new \Exception('No se pudo guardar la firma');
+			}
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Firma guardada correctamente',
+				'data' => [
+					'acta_id' => $id,
+					'signer_name' => $updateData['signer_name'],
+					'signed_at' => $updateData['signed_at']->format('Y-m-d H:i:s')
+				]
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al guardar firma del acta: ' . $e->getMessage());
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Error al guardar la firma: ' . $e->getMessage()
+			], 500);
 		}
-		
-		// Guardar firma del acta
-		public function saveActaSignature($id)
-		{
-		    try {
-		        $input = Request::all();
+	}
 
-		        $validator = \Validator::make($input, [
-		            'signature' => 'required|string',
-		            'signer_name' => 'required|string|min:3|max:100',
-		            'signer_position' => 'nullable|string|max:100',
-		            'signer_company' => 'nullable|string|max:100'
-		        ]);
+	public function saveSignedActaPDF($id)
+	{
+		try {
+			$input = Request::all();
 
-		        if ($validator->fails()) {
-		            return response()->json([
-		                'success' => false,
-		                'message' => 'Datos inválidos: ' . $validator->errors()->first()
-		            ], 400);
-		        }
+			if (!isset($input['pdf_data']) || empty($input['pdf_data'])) {
+				return response()->json([
+					'success' => false,
+					'message' => 'No se recibió el contenido del PDF firmado del acta'
+				], 400);
+			}
 
-		        $acta = DB::table('actas')->where('id', $id)->first();
-		        if (!$acta) {
-		            return response()->json([
-		                'success' => false,
-		                'message' => 'Acta no encontrada'
-		            ], 404);
-		        }
+			$acta = DB::table('actas')->where('id', $id)->first();
+			if (!$acta) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Acta no encontrada'
+				], 404);
+			}
 
-		        $updateData = [
-		            'signature_data' => $input['signature'],
-		            'signer_name' => trim($input['signer_name']),
-		            'signer_position' => trim($input['signer_position'] ?? ''),
-		            'signer_company' => trim($input['signer_company'] ?? ''),
-		            'signed_at' => now(),
-		            'signature_ip' => Request::ip(),
-		            'updated_at' => now()
-		        ];
+			$orderId = $acta->orderid;
 
-		        $updated = DB::table('actas')->where('id', $id)->update($updateData);
+			$pdfBase64 = $input['pdf_data'];
 
-		        if (!$updated) {
-		            throw new \Exception('No se pudo guardar la firma');
-		        }
+			$pdfBinaryData = base64_decode($pdfBase64, true);
+			if (!$pdfBinaryData) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Datos del PDF del acta inválidos - base64 corrupto'
+				], 400);
+			}
 
-		        return response()->json([
-		            'success' => true,
-		            'message' => 'Firma guardada correctamente',
-		            'data' => [
-		                'acta_id' => $id,
-		                'signer_name' => $updateData['signer_name'],
-		                'signed_at' => $updateData['signed_at']->format('Y-m-d H:i:s')
-		            ]
-		        ]);
-		        
-		    } catch (\Exception $e) {
-		        \Log::error('Error al guardar firma del acta: ' . $e->getMessage());
+			if (substr($pdfBinaryData, 0, 4) !== '%PDF') {
+				return response()->json([
+					'success' => false,
+					'message' => 'El archivo del acta no es un PDF válido'
+				], 400);
+			}
 
-		        return response()->json([
-		            'success' => false,
-		            'message' => 'Error al guardar la firma: ' . $e->getMessage()
-		        ], 500);
-		    }
+			$fileName = 'delivery_signed_' . $orderId . '_' . date('Y-m-d_H-i-s') . '.pdf';
+			$fileSize = strlen($pdfBinaryData);
+
+			$orderDocument = DB::table('service_order_documents')->where('order_id', $orderId)->first();
+
+			if ($orderDocument) {
+				$updated = DB::table('service_order_documents')
+					->where('order_id', $orderId)
+					->update([
+						'delivery_signed' => $pdfBase64,
+						'delivery_filename' => $fileName,
+						'delivery_size' => $fileSize,
+						'delivery_signed_at' => now(),
+						'updated_at' => now()
+					]);
+			} else {
+				\Log::warning("Se intenta firmar acta sin haber firmado recepción para orden {$orderId}");
+
+				$updated = DB::table('service_order_documents')->insert([
+					'order_id' => $orderId,
+					'reception_signed' => null,
+					'reception_filename' => null,
+					'reception_size' => null,
+					'reception_signed_at' => null,
+					'delivery_signed' => $pdfBase64, 
+					'delivery_filename' => $fileName,
+					'delivery_size' => $fileSize,
+					'delivery_signed_at' => now(),
+					'created_at' => now(),
+					'updated_at' => now()
+				]);
+			}
+
+			if (!$updated) {
+				throw new \Exception('No se pudo guardar el acta en la base de datos');
+			}
+			$finalRecord = DB::table('service_order_documents')->where('order_id', $orderId)->first();
+			$isCompleteProcess = !empty($finalRecord->reception_signed) && !empty($finalRecord->delivery_signed);
+
+			\Log::info("Acta de entrega firmada guardada como base64 para orden {$orderId}", [
+				'filename' => $fileName,
+				'size_bytes' => $fileSize,
+				'base64_length' => strlen($pdfBase64),
+				'timestamp' => now()->format('Y-m-d H:i:s'),
+				'process_complete' => $isCompleteProcess,
+				'reception_file' => $finalRecord->reception_signed ? 'Disponible' : 'No disponible'
+			]);
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Acta de entrega firmada guardada correctamente en la base de datos',
+				'data' => [
+					'acta_id' => $id,
+					'order_id' => $orderId,
+					'filename' => $fileName,
+					'size' => $fileSize,
+					'document_type' => 'delivery',
+					'storage_type' => 'base64_database',
+					'saved_at' => now()->format('Y-m-d H:i:s'),
+					'process_status' => $isCompleteProcess ? 'PROCESO COMPLETO - Ambos documentos firmados' : 'Esperando documento de recepción',
+					'both_documents_ready' => $isCompleteProcess
+				]
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al guardar acta firmada como base64: ' . $e->getMessage());
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Error al guardar acta: ' . $e->getMessage()
+			], 500);
 		}
-		
-		// Obtener información del firmante del acta
-		public function getActaSignerInfo($id)
-		{
-		    try {
-		        $acta = DB::table('actas')
-		            ->join('orders', 'actas.orderid', '=', 'orders.id')
-		            ->join('cms_users', 'orders.id_usuario', '=', 'cms_users.id')
-		            ->where('actas.id', $id)
-		            ->select(
-		                'cms_users.name as signer_name',
-		                DB::raw("'Responsable de Entrega' as signer_position"),
-		                DB::raw("'SAROV' as signer_company")
-		            )
-		            ->first();
+	}
 
-		        if (!$acta) {
-		            return response()->json([
-		                'success' => false,
-		                'message' => 'Acta no encontrada'
-		            ]);
-		        }
+	public function getActaSignerInfo($id)
+	{
+		try {
+			$acta = DB::table('actas')
+				->join('orders', 'actas.orderid', '=', 'orders.id')
+				->join('cms_users', 'orders.id_usuario', '=', 'cms_users.id')
+				->where('actas.id', $id)
+				->select(
+					'cms_users.name as signer_name',
+					DB::raw("'Responsable de Entrega' as signer_position"),
+					DB::raw("'SAROV' as signer_company")
+				)
+				->first();
 
-		        return response()->json([
-		            'success' => true,
-		            'data' => $acta
-		        ]);
-		        
-		    } catch (\Exception $e) {
-		        return response()->json([
-		            'success' => false,
-		            'message' => 'Error: ' . $e->getMessage()
-		        ]);
-		    }
+			if (!$acta) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Acta no encontrada'
+				]);
+			}
+
+			return response()->json([
+				'success' => true,
+				'data' => $acta
+			]);
+		} catch (\Exception $e) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]);
 		}
+	}
 
-		// ====================================================================
-		// MÉTODO PARA GUARDAR PDF FIRMADO DEL ACTA EN BASE DE DATOS
-		// ====================================================================
-		
-		// Método para guardar PDF firmado del acta en la base de datos
-		public function saveSignedActaPDF($id)
-		{
-		    try {
-		        $input = Request::all();
-		        
-		        // Validar que se recibió el archivo PDF
-		        if (!Request::hasFile('signed_pdf')) {
-		            return response()->json([
-		                'success' => false,
-		                'message' => 'No se recibió el archivo PDF firmado del acta'
-		            ], 400);
-		        }
-		        
-		        $file = Request::file('signed_pdf');
-		        $actaId = $input['acta_id'];
-		        
-		        // Verificar que el acta existe y obtener el order_id
-		        $acta = DB::table('actas')->where('id', $id)->first();
-		        if (!$acta) {
-		            return response()->json([
-		                'success' => false,
-		                'message' => 'Acta no encontrada'
-		            ], 404);
-		        }
-		        
-		        $orderId = $acta->orderid; // El campo que conecta acta con orden
-		        
-		        // Generar nombre único para el archivo
-		        $fileName = 'delivery_signed_' . $orderId . '_' . time() . '.pdf';
-		        
-		        // Guardar archivo en storage/app/public/signed_pdfs
-		        $filePath = $file->storeAs('signed_pdfs', $fileName, 'public');
-		        
-		        // Insertar o actualizar en service_order_documents
-		        DB::table('service_order_documents')->updateOrInsert(
-		            ['order_id' => $orderId],
-		            [
-		                'delivery_signed' => $filePath,
-		                'updated_at' => now()
-		            ]
-		        );
-		        
-		        return response()->json([
-		            'success' => true,
-		            'message' => 'Acta firmada guardada correctamente',
-		            'data' => [
-		                'acta_id' => $actaId,
-		                'order_id' => $orderId,
-		                'file_path' => $filePath,
-		                'saved_at' => now()->format('Y-m-d H:i:s')
-		            ]
-		        ]);
-		        
-		    } catch (\Exception $e) {
-		        \Log::error('Error al guardar acta firmada: ' . $e->getMessage());
-		        
-		        return response()->json([
-		            'success' => false,
-		            'message' => 'Error al guardar acta: ' . $e->getMessage()
-		        ], 500);
-		    }
-		}
-
-	    /*
+	/*
 	    | ---------------------------------------------------------------------- 
 	    | Hook for button selected
 	    | ---------------------------------------------------------------------- 
@@ -457,105 +495,105 @@
 	    | @button_name = the name of button
 	    |
 	    */
-	    public function actionButtonSelected($id_selected,$button_name) {
-	        //Your code here
-	    }
+	public function actionButtonSelected($id_selected, $button_name)
+	{}
 
-	    /*
+	/*
 	    | ---------------------------------------------------------------------- 
 	    | Hook for manipulate query of index result 
 	    | ---------------------------------------------------------------------- 
 	    | @query = current sql query 
 	    |
 	    */
-	    public function hook_query_index(&$query) {
-	      	      if(CRUDBooster::isSuperadmin()){ 
-			}else{
+	public function hook_query_index(&$query)
+	{
+		if (CRUDBooster::isSuperadmin()) {
+			// Superadmin puede ver todas las actas
+		} else {
+			// Filtrar por privilegios de usuario
 			if (CRUDBooster::myPrivilegeId() == '13') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '14') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '15') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '16') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '17') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '18') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }else{
-			if (CRUDBooster::myPrivilegeId() == '19') {
-		  $user_id = CRUDBooster::myId(); 
-	      $query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
-          ->select('actas.*')
-          ->where('actas.id_usuario', $user_id);
-			          }
-		    	}
-		    	}
-		    	}
-		    	}
-		    	}
-		    	}
-		    	}		   
-	    }
+				$user_id = CRUDBooster::myId();
+				$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+					->select('actas.*')
+					->where('actas.id_usuario', $user_id);
+			} else {
+				if (CRUDBooster::myPrivilegeId() == '14') {
+					$user_id = CRUDBooster::myId();
+					$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+						->select('actas.*')
+						->where('actas.id_usuario', $user_id);
+				} else {
+					if (CRUDBooster::myPrivilegeId() == '15') {
+						$user_id = CRUDBooster::myId();
+						$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+							->select('actas.*')
+							->where('actas.id_usuario', $user_id);
+					} else {
+						if (CRUDBooster::myPrivilegeId() == '16') {
+							$user_id = CRUDBooster::myId();
+							$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+								->select('actas.*')
+								->where('actas.id_usuario', $user_id);
+						} else {
+							if (CRUDBooster::myPrivilegeId() == '17') {
+								$user_id = CRUDBooster::myId();
+								$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+									->select('actas.*')
+									->where('actas.id_usuario', $user_id);
+							} else {
+								if (CRUDBooster::myPrivilegeId() == '18') {
+									$user_id = CRUDBooster::myId();
+									$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+										->select('actas.*')
+										->where('actas.id_usuario', $user_id);
+								} else {
+									if (CRUDBooster::myPrivilegeId() == '19') {
+										$user_id = CRUDBooster::myId();
+										$query->join('cms_users', 'cms_users.id', '=', 'actas.id_usuario')
+											->select('actas.*')
+											->where('actas.id_usuario', $user_id);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
-	    /*
+	/*
 	    | ---------------------------------------------------------------------- 
 	    | Hook for manipulate row of index table html 
 	    | ---------------------------------------------------------------------- 
 	    |
-	    */    
-	    public function hook_row_index($column_index,&$column_value) {	        
-	    	//Your code here
-	    }
+	    */
+	public function hook_row_index($column_index, &$column_value)
+	{}
 
-	    /*
+	/*
 	    | ---------------------------------------------------------------------- 
 	    | Hook for manipulate data input before add data is execute
 	    | ---------------------------------------------------------------------- 
 	    | @arr
 	    |
 	    */
-	    public function hook_before_add(&$postdata) { 
-	     $postdata['id_usuario'] = CRUDBooster::myId();     
-	        //Your code here
-	    }
+	public function hook_before_add(&$postdata)
+	{
+		$postdata['id_usuario'] = CRUDBooster::myId();
+	}
 
-	    /* 
+	/* 
 	    | ---------------------------------------------------------------------- 
 	    | Hook for execute command after add public static function called 
 	    | ---------------------------------------------------------------------- 
 	    | @id = last insert id
 	    | 
 	    */
-	    public function hook_after_add($id) {        
-	        //Your code here
-	    }
+	public function hook_after_add($id)
+	{}
 
-	    /* 
+	/* 
 	    | ---------------------------------------------------------------------- 
 	    | Hook for manipulate data input before update data is execute
 	    | ---------------------------------------------------------------------- 
@@ -563,42 +601,37 @@
 	    | @id       = current id 
 	    | 
 	    */
-	    public function hook_before_edit(&$postdata,$id) {        
-	        //Your code here
-	    }
+	public function hook_before_edit(&$postdata, $id)
+	{}
 
-	    /* 
+	/* 
 	    | ---------------------------------------------------------------------- 
 	    | Hook for execute command after edit public static function called
 	    | ----------------------------------------------------------------------     
 	    | @id       = current id 
 	    | 
 	    */
-	    public function hook_after_edit($id) {
-	        //Your code here 
-	    }
+	public function hook_after_edit($id)
+	{}
 
-	    /* 
+	/* 
 	    | ---------------------------------------------------------------------- 
 	    | Hook for execute command before delete public static function called
 	    | ----------------------------------------------------------------------     
 	    | @id       = current id 
 	    | 
 	    */
-	    public function hook_before_delete($id) {
-	        //Your code here
-	    }
+	public function hook_before_delete($id)
+	{}
 
-	    /* 
+	/* 
 	    | ---------------------------------------------------------------------- 
 	    | Hook for execute command after delete public static function called
 	    | ----------------------------------------------------------------------     
 	    | @id       = current id 
 	    | 
 	    */
-	    public function hook_after_delete($id) {
-	        //Your code here
-	    }
-
-	    //By the way, you can still create your own method in here... :) 
-	}
+	public function hook_after_delete($id)
+	{}
+	
+}

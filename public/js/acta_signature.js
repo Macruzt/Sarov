@@ -1,39 +1,29 @@
-// Variables globales para el modal del acta
 window.actaSignaturePad = null;
 window.currentActaId = null;
 window.isActaSigningActive = false;
 window.isActaMouseDown = false;
+window.currentSignatureStep = 1; 
+window.entregaSignature = null; 
+window.recibeSignature = null; 
 
-// NUEVAS VARIABLES para manejo de dos firmas
-window.currentSignatureStep = 1; // 1 = quien entrega, 2 = quien recibe
-window.entregaSignature = null; // Almacenar primera firma
-window.recibeSignature = null;  // Almacenar segunda firma
-
-// Función principal para abrir el modal del acta
 async function openActaPDFModal(actaId) {
-    // Validar acta ID
     if (!actaId || actaId === "[id]") {
         alert("Error: ID de acta no válido");
         return;
     }
 
     window.currentActaId = actaId;
-
-    // Usar valores por defecto sin hacer peticiones al backend
     window.actaSignerName = "Usuario del Sistema";
     window.actaSignerPosition = "Responsable de Entrega";
     window.actaSignerCompany = "SAROV";
 
-    // Verificar dependencias
     if (!checkActaDependencies()) {
         return;
     }
 
-    // Remover modal anterior si existe
     cleanupActaModal();
 
     try {
-        // Crear y mostrar modal
         var modalHtml = createActaModalHTML(actaId);
         $("body").append(modalHtml);
 
@@ -43,33 +33,28 @@ async function openActaPDFModal(actaId) {
             show: true,
         });
 
-        // Configurar eventos del modal
         setupActaModalEvents();
     } catch (error) {
         alert("Error al abrir el modal del acta: " + error.message);
     }
 }
 
-// Verificar dependencias
 function checkActaDependencies() {
     var missing = [];
 
     if (typeof SignaturePad === "undefined") {
         missing.push("SignaturePad");
     }
-
     if (typeof PDFLib === "undefined") {
         missing.push("PDFLib");
     }
-
     if (typeof jQuery === "undefined" && typeof $ === "undefined") {
         missing.push("jQuery");
     }
-
     if (missing.length > 0) {
         alert(
             "Error: Las siguientes librerías no están disponibles: " +
-                missing.join(", ") + 
+                missing.join(", ") +
                 "\nVerifique que estén cargadas correctamente."
         );
         return false;
@@ -78,7 +63,6 @@ function checkActaDependencies() {
     return true;
 }
 
-// Limpiar modal anterior
 function cleanupActaModal() {
     if ($("#actaPdfSignModal").length) {
         $("#actaPdfSignModal").modal("hide").remove();
@@ -88,16 +72,12 @@ function cleanupActaModal() {
     window.actaSignaturePad = null;
     window.isActaSigningActive = false;
     window.isActaMouseDown = false;
-    
-    // RESETEAR variables de firma
     window.currentSignatureStep = 1;
     window.entregaSignature = null;
     window.recibeSignature = null;
 }
 
-// Configurar eventos del modal
 function setupActaModalEvents() {
-    // Cuando el modal se muestra completamente
     $("#actaPdfSignModal").on("shown.bs.modal", function () {
         $("#acta-debug-info").show();
         $("#acta-signature-status").text("Inicializando...");
@@ -107,12 +87,10 @@ function setupActaModalEvents() {
         }, 500);
     });
 
-    // Cuando el modal se oculta
     $("#actaPdfSignModal").on("hidden.bs.modal", function () {
         cleanupActaModal();
     });
 
-    // Manejar errores del iframe
     $("#acta-pdf-preview").on("error", function () {
         console.warn("Error cargando PDF preview del acta");
         $(this)
@@ -123,10 +101,9 @@ function setupActaModalEvents() {
     });
 }
 
-// Función para crear el HTML del modal del acta
 function createActaModalHTML(actaId) {
     var baseUrl = getBaseUrl();
-    var pdfUrl = baseUrl + "/admin/actas/" + actaId + "/view-pdf"; // Ruta para vista previa del acta
+    var pdfUrl = baseUrl + "/admin/actas/" + actaId + "/get-pdf"; 
 
     var currentDate = new Date().toLocaleString("es-CO", {
         year: "numeric",
@@ -284,12 +261,10 @@ function createActaModalHTML(actaId) {
     );
 }
 
-// Obtener URL base
 function getBaseUrl() {
     return window.location.origin;
 }
 
-// Ocultar indicador de carga
 function hideActaLoading() {
     setTimeout(function () {
         $("#acta-loading-indicator").fadeOut(300, function () {
@@ -298,7 +273,6 @@ function hideActaLoading() {
     }, 500);
 }
 
-// Inicializar SignaturePad para el acta
 function initActaSignaturePad() {
     var canvas = document.getElementById("acta-signature-pad");
     if (!canvas) {
@@ -307,25 +281,17 @@ function initActaSignaturePad() {
     }
 
     try {
-        // Configurar dimensiones
         var rect = canvas.getBoundingClientRect();
         var computedStyle = getComputedStyle(canvas);
-
         var displayWidth = parseInt(computedStyle.width) || 300;
         var displayHeight = parseInt(computedStyle.height) || 150;
-
         var ratio = Math.max(window.devicePixelRatio || 1, 1);
-
         canvas.width = displayWidth * ratio;
         canvas.height = displayHeight * ratio;
-
         var ctx = canvas.getContext("2d");
         ctx.scale(ratio, ratio);
-
         canvas.style.width = displayWidth + "px";
         canvas.style.height = displayHeight + "px";
-
-        // Crear SignaturePad
         window.actaSignaturePad = new SignaturePad(canvas, {
             backgroundColor: "rgba(255, 255, 255, 1)",
             penColor: "rgb(0, 0, 0)",
@@ -339,104 +305,99 @@ function initActaSignaturePad() {
             },
         });
 
-        // Desactivar inicialmente
         if (window.actaSignaturePad.off) {
             window.actaSignaturePad.off();
         }
-        
-        $("#acta-signature-status").text("Desactivado - Haga clic en 'Activar Firma'");
-        window.isActaSigningActive = false;
 
+        $("#acta-signature-status").text(
+            "Desactivado - Haga clic en 'Activar Firma'"
+        );
+        window.isActaSigningActive = false;
     } catch (error) {
         alert("Error al inicializar la firma del acta: " + error.message);
     }
 }
 
-// Activar el modo de firma para el acta
 function activateActaSignature() {
     if (!window.actaSignaturePad) {
         alert("Error: Sistema de firma del acta no inicializado");
         return;
     }
-    
+
     window.isActaSigningActive = true;
-    
+
     var canvas = document.getElementById("acta-signature-pad");
     if (!canvas) {
         alert("Error: Canvas del acta no encontrado");
         return;
     }
-    
-    // Configurar canvas activo
+
     canvas.style.cursor = "crosshair";
     canvas.style.background = "white";
     canvas.style.border = "2px solid #dc3545";
     canvas.style.pointerEvents = "auto";
     canvas.removeAttribute("disabled");
-    
+
     // Cambiar interfaz
     $("#acta-signature-overlay").hide();
     $("#acta-activate-signature-btn").hide();
     $("#acta-signature-controls").show();
-    
+
     $("#acta-signature-instructions").html(
         '<i class="fa fa-pencil text-success"></i> <strong>FIRMANDO:</strong> Mantenga presionado y dibuje. No salga del área hasta terminar.'
     );
-    
-    $("#acta-signature-status").text("✅ Activado - Listo para firmar");
-    
-    // Habilitar SignaturePad
+
+    $("#acta-signature-status").text("Activado - Listo para firmar");
+
     if (window.actaSignaturePad.on) {
         window.actaSignaturePad.on();
     }
-    
+
     setupActaSignatureCapture(canvas);
-    
-    setTimeout(function() {
-        $("#acta-signature-instructions").append('<br><small style="color: #28a745;"><i class="fa fa-check"></i> Sistema activado - Puede comenzar a firmar</small>');
+
+    setTimeout(function () {
+        $("#acta-signature-instructions").append(
+            '<br><small style="color: #28a745;"><i class="fa fa-check"></i> Sistema activado - Puede comenzar a firmar</small>'
+        );
     }, 1000);
 }
 
-// Configurar captura del mouse para el acta
 function setupActaSignatureCapture(canvas) {
-    canvas.removeEventListener('mousedown', handleActaMouseDown);
-    document.removeEventListener('mousemove', handleActaMouseMove);
-    document.removeEventListener('mouseup', handleActaMouseUp);
-    
-    canvas.addEventListener('mousedown', handleActaMouseDown);
-    document.addEventListener('mousemove', handleActaMouseMove);
-    document.addEventListener('mouseup', handleActaMouseUp);
-    
-    canvas.addEventListener('touchstart', handleActaTouchStart);
-    document.addEventListener('touchend', handleActaTouchEnd);
-    document.addEventListener('touchmove', handleActaTouchMove);
+    canvas.removeEventListener("mousedown", handleActaMouseDown);
+    document.removeEventListener("mousemove", handleActaMouseMove);
+    document.removeEventListener("mouseup", handleActaMouseUp);
+    canvas.addEventListener("mousedown", handleActaMouseDown);
+    document.addEventListener("mousemove", handleActaMouseMove);
+    document.addEventListener("mouseup", handleActaMouseUp);
+    canvas.addEventListener("touchstart", handleActaTouchStart);
+    document.addEventListener("touchend", handleActaTouchEnd);
+    document.addEventListener("touchmove", handleActaTouchMove);
 }
 
 function handleActaMouseDown(e) {
     if (!window.isActaSigningActive) return;
-    
     window.isActaMouseDown = true;
-    document.body.style.cursor = 'crosshair';
-    document.body.style.userSelect = 'none';
+    document.body.style.cursor = "crosshair";
+    document.body.style.userSelect = "none";
     e.preventDefault();
 }
 
 function handleActaMouseMove(e) {
     if (!window.isActaMouseDown || !window.isActaSigningActive) return;
-    
+
     var canvas = document.getElementById("acta-signature-pad");
     var rect = canvas.getBoundingClientRect();
     var x = e.clientX;
     var y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
         var constrainedX = Math.max(rect.left + 1, Math.min(rect.right - 1, x));
         var constrainedY = Math.max(rect.top + 1, Math.min(rect.bottom - 1, y));
-        
-        var syntheticEvent = new MouseEvent('mousemove', {
+
+        var syntheticEvent = new MouseEvent("mousemove", {
             clientX: constrainedX,
             clientY: constrainedY,
-            bubbles: true
+            bubbles: true,
         });
         canvas.dispatchEvent(syntheticEvent);
     }
@@ -444,11 +405,9 @@ function handleActaMouseMove(e) {
 
 function handleActaMouseUp(e) {
     if (!window.isActaMouseDown) return;
-    
     window.isActaMouseDown = false;
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
-    
+    document.body.style.cursor = "default";
+    document.body.style.userSelect = "auto";
     if (window.actaSignaturePad && !window.actaSignaturePad.isEmpty()) {
         $("#acta-signature-instructions").html(
             '<i class="fa fa-check-circle text-success"></i> <strong>Trazo completado:</strong> Puede continuar firmando o presionar "Terminar" para revisar.'
@@ -472,167 +431,152 @@ function handleActaTouchMove(e) {
     e.preventDefault();
 }
 
-// Terminar la firma del acta
 function finishActaSignature() {
     if (!window.actaSignaturePad || window.actaSignaturePad.isEmpty()) {
         alert("No hay firma para revisar. Por favor dibuje su firma primero.");
         return;
     }
-    
     window.isActaSigningActive = false;
     window.isActaMouseDown = false;
-    
     var canvas = document.getElementById("acta-signature-pad");
     canvas.style.cursor = "not-allowed";
     canvas.style.border = "2px solid #6c757d";
     canvas.setAttribute("disabled", true);
-    
+
     $("#acta-signature-status").text("Firma completada - En revisión");
-    
+
     $("#acta-signature-instructions").html(
         '<i class="fa fa-eye text-info"></i> <strong>REVISIÓN:</strong> Examine su firma. Use "Vista Previa" para verla mejor o "Limpiar" para empezar de nuevo.'
     );
-    
+
     $("#acta-signature-controls").hide();
-    
+
     if ($("#acta-review-controls").length === 0) {
-        var reviewButtons = 
+        var reviewButtons =
             '<div class="row mt-3" id="acta-review-controls">' +
             '<div class="col-4">' +
             '<button type="button" class="btn btn-warning btn-sm btn-block" onclick="restartActaSignature()">' +
             '<i class="fa fa-refresh"></i> Firmar de Nuevo' +
-            '</button>' +
-            '</div>' +
+            "</button>" +
+            "</div>" +
             '<div class="col-4">' +
             '<button type="button" class="btn btn-info btn-sm btn-block" onclick="previewActaSignature()">' +
             '<i class="fa fa-search-plus"></i> Vista Previa' +
-            '</button>' +
-            '</div>' +
+            "</button>" +
+            "</div>" +
             '<div class="col-4">' +
             '<button type="button" class="btn btn-success btn-sm btn-block" onclick="approveActaSignature()">' +
             '<i class="fa fa-thumbs-up"></i> Aprobar' +
-            '</button>' +
-            '</div>' +
-            '</div>';
-        
+            "</button>" +
+            "</div>" +
+            "</div>";
         $("#acta-signature-controls").after(reviewButtons);
     }
-    
     $("#acta-review-controls").show();
-    
-    setTimeout(function() {
+    setTimeout(function () {
         previewActaSignature();
     }, 500);
 }
 
-// Reiniciar firma del acta
 function restartActaSignature() {
     clearActaSignature();
-    
+
     $("#acta-activate-signature-btn").show();
     $("#acta-signature-controls").hide();
     $("#acta-review-controls").hide();
-    
     var canvas = document.getElementById("acta-signature-pad");
     canvas.style.cursor = "not-allowed";
     canvas.style.background = "#f0f0f0";
     canvas.style.border = "2px solid #ccc";
     canvas.setAttribute("disabled", true);
-    
     $("#acta-signature-overlay").show();
-    
     $("#acta-signature-instructions").html(
         '<i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> 1) Active la firma 2) Dibuje sin salir del área 3) Revise el resultado'
     );
-    
     $("#acta-signature-status").text("Desactivado");
     window.isActaSigningActive = false;
     window.isActaMouseDown = false;
 }
 
-// Aprobar firma del acta
 function approveActaSignature() {
     if (!window.actaSignaturePad || window.actaSignaturePad.isEmpty()) {
         alert("No hay firma para aprobar.");
         return;
     }
-    
+
     if (window.currentSignatureStep === 1) {
-        // Guardar primera firma y pasar al siguiente paso
-        window.entregaSignature = window.actaSignaturePad.toDataURL("image/png");
-        
-        $("#acta-signature-status").text("Primera firma completada - Preparando segunda firma");
+        window.entregaSignature =
+            window.actaSignaturePad.toDataURL("image/png");
+        $("#acta-signature-status").text(
+            "Primera firma completada - Preparando segunda firma"
+        );
         $("#acta-signature-instructions").html(
             '<i class="fa fa-check-circle text-success"></i> <strong>PRIMERA FIRMA COMPLETADA:</strong> Ahora procederá con la firma de quien recibe.'
         );
-        
-        setTimeout(function() {
+
+        setTimeout(function () {
             startSecondSignature();
         }, 2000);
-        
     } else if (window.currentSignatureStep === 2) {
-        // Guardar segunda firma y finalizar
         window.recibeSignature = window.actaSignaturePad.toDataURL("image/png");
-        
-        $("#acta-signature-status").text("Ambas firmas completadas - Listas para usar");
+        $("#acta-signature-status").text(
+            "Ambas firmas completadas - Listas para usar"
+        );
         $("#acta-signature-instructions").html(
             '<i class="fa fa-check-circle text-success"></i> <strong>PROCESO COMPLETADO:</strong> Ambas firmas han sido capturadas. Puede proceder a descargar el acta firmada.'
         );
-        
         $("#acta-review-controls").hide();
-        $('button[onclick*="downloadSignedActaPDF"]').removeClass('disabled').prop('disabled', false);
+        $('button[onclick*="downloadSignedActaPDF"]')
+            .removeClass("disabled")
+            .prop("disabled", false);
     }
 }
 
-// Nueva función para iniciar la segunda firma
 function startSecondSignature() {
     window.currentSignatureStep = 2;
-    
-    // Limpiar el canvas para la segunda firma
+
     if (window.actaSignaturePad) {
         window.actaSignaturePad.clear();
     }
-    
-    // Actualizar la interfaz para la segunda firma
+
     $("#current-signature-label").text("Firma de quien recibe:");
     $("#signature-step-info").html(
         '<i class="fa fa-info-circle"></i> <strong>Paso 2 de 2:</strong><br>' +
-        "• Firmando como: Quien recibe<br>" +
-        "• Cliente/Responsable<br>" +
-        "• Última firma requerida"
+            "• Firmando como: Quien recibe<br>" +
+            "• Cliente/Responsable<br>" +
+            "• Última firma requerida"
     );
-    
-    // Reiniciar el proceso de firma
+
     $("#acta-activate-signature-btn").show();
     $("#acta-signature-controls").hide();
     $("#acta-review-controls").hide();
-    
+
     var canvas = document.getElementById("acta-signature-pad");
     canvas.style.cursor = "not-allowed";
     canvas.style.background = "#f0f0f0";
     canvas.style.border = "2px solid #ccc";
     canvas.setAttribute("disabled", true);
-    
+
     $("#acta-signature-overlay").show();
-    
+
     $("#acta-signature-instructions").html(
         '<i class="fa fa-info-circle"></i> <strong>Segunda firma:</strong> Active la firma para que quien recibe pueda firmar el documento.'
     );
-    
+
     $("#acta-signature-status").text("Esperando segunda firma");
     window.isActaSigningActive = false;
     window.isActaMouseDown = false;
-    
-    // Cambiar el texto del botón de activación
-    $("#acta-activate-signature-btn").html('<i class="fa fa-unlock"></i> ACTIVAR FIRMA DE QUIEN RECIBE');
+
+    $("#acta-activate-signature-btn").html(
+        '<i class="fa fa-unlock"></i> ACTIVAR FIRMA DE QUIEN RECIBE'
+    );
 }
 
-// Limpiar firma del acta
 function clearActaSignature() {
     if (window.actaSignaturePad) {
         window.actaSignaturePad.clear();
         $("#acta-signature-preview").hide();
-        
+
         if (window.isActaSigningActive) {
             $("#acta-signature-status").text("Activado - Listo para firmar");
             $("#acta-signature-instructions").html(
@@ -646,7 +590,6 @@ function clearActaSignature() {
     }
 }
 
-// Vista previa de firma del acta
 function previewActaSignature() {
     if (!window.actaSignaturePad || window.actaSignaturePad.isEmpty()) {
         alert("Por favor dibuje su firma primero");
@@ -662,18 +605,16 @@ function previewActaSignature() {
     }
 }
 
-// Descargar PDF del acta firmado
 async function downloadSignedActaPDF(actaId) {
-    // Validar que ambas firmas estén completas
     if (!window.entregaSignature || !window.recibeSignature) {
-        alert("Debe completar ambas firmas antes de descargar el documento");
+        alert("Debe completar ambas firmas antes de guardar el acta");
         return;
     }
 
-    var downloadBtn = $('button[onclick*="downloadSignedActaPDF(' + actaId + ')"]');
-    var originalText = downloadBtn.html();
-    downloadBtn
-        .html('<i class="fa fa-spinner fa-spin"></i> Procesando Acta...')
+    var saveBtn = $('button[onclick*="downloadSignedActaPDF(' + actaId + ')"]');
+    var originalText = saveBtn.html();
+    saveBtn
+        .html('<i class="fa fa-spinner fa-spin"></i> Guardando acta...')
         .prop("disabled", true);
 
     try {
@@ -682,7 +623,11 @@ async function downloadSignedActaPDF(actaId) {
 
         var response = await fetch(pdfUrl);
         if (!response.ok) {
-            throw new Error("No se pudo cargar el PDF del acta (Error: " + response.status + ")");
+            throw new Error(
+                "No se pudo cargar el PDF del acta (Error: " +
+                    response.status +
+                    ")"
+            );
         }
 
         var existingPdfBytes = await response.arrayBuffer();
@@ -692,21 +637,15 @@ async function downloadSignedActaPDF(actaId) {
         var pageSize = firstPage.getSize();
         var width = pageSize.width;
         var height = pageSize.height;
-
-        // Procesar PRIMERA firma (quien entrega)
         var entregaResponse = await fetch(window.entregaSignature);
         var entregaImageBytes = await entregaResponse.arrayBuffer();
         var entregaImage = await pdfDoc.embedPng(entregaImageBytes);
-
-        // Procesar SEGUNDA firma (quien recibe)
         var recibeResponse = await fetch(window.recibeSignature);
         var recibeImageBytes = await recibeResponse.arrayBuffer();
         var recibeImage = await pdfDoc.embedPng(recibeImageBytes);
-
-        // Posicionar firma de QUIEN ENTREGA (lado izquierdo)
         var signatureWidth = 100;
         var signatureHeight = 40;
-        var entregaX = 85; // Lado izquierdo
+        var entregaX = 85; 
         var entregaY = 729;
 
         firstPage.drawImage(entregaImage, {
@@ -716,8 +655,7 @@ async function downloadSignedActaPDF(actaId) {
             height: signatureHeight,
         });
 
-        // Posicionar firma de QUIEN RECIBE (lado derecho)
-        var recibeX = width - signatureWidth - 90; // Lado derecho
+        var recibeX = width - signatureWidth - 90;
         var recibeY = 729;
 
         firstPage.drawImage(recibeImage, {
@@ -727,10 +665,8 @@ async function downloadSignedActaPDF(actaId) {
             height: signatureHeight,
         });
 
-        // Agregar información de firmantes
         var fontSize = 7;
-        
-        // Texto para quien entrega
+
         firstPage.drawText("Entregado por SAROV", {
             x: entregaX,
             y: entregaY - 12,
@@ -738,7 +674,6 @@ async function downloadSignedActaPDF(actaId) {
             color: PDFLib.rgb(0, 0, 0),
         });
 
-        // Texto para quien recibe
         firstPage.drawText("Recibido por Cliente", {
             x: recibeX,
             y: recibeY - 12,
@@ -746,32 +681,50 @@ async function downloadSignedActaPDF(actaId) {
             color: PDFLib.rgb(0, 0, 0),
         });
 
-        // Descargar PDF
         var pdfBytes = await pdfDoc.save();
-        var blob = new Blob([pdfBytes], { type: "application/pdf" });
-        var url = URL.createObjectURL(blob);
 
-        var a = document.createElement("a");
-        a.href = url;
-        a.download = "Acta_Entrega_" + actaId + "_Firmada_" + new Date().toISOString().split("T")[0] + ".pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        var pdfBase64 = btoa(String.fromCharCode.apply(null, pdfBytes));
 
-        $("#actaPdfSignModal").modal("hide");
+        var saveResponse = await fetch(
+            baseUrl + "/admin/actas/" + actaId + "/save-signed-pdf",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": getCSRFToken(),
+                },
+                body: JSON.stringify({
+                    pdf_data: pdfBase64,
+                    signer_name: window.actaSignerName || "Usuario del Sistema",
+                    acta_id: actaId,
+                }),
+            }
+        );
 
-        setTimeout(function () {
-            alert("Acta de entrega con ambas firmas descargada correctamente");
-        }, 500);
+        var saveResult = await saveResponse.json();
+        if (saveResult.success) {
+            $("#actaPdfSignModal").modal("hide");
+            setTimeout(function () {
+                alert(
+                    "Acta de entrega guardada correctamente en el sistema"
+                );
+
+                if (
+                    confirm("¿Desea recargar la página para ver los cambios?")
+                ) {
+                    window.location.reload();
+                }
+            }, 500);
+        } else {
+            throw new Error(saveResult.message || "Error al guardar el acta");
+        }
     } catch (error) {
         alert("Error al procesar el acta: " + error.message);
     } finally {
-        downloadBtn.html(originalText).prop("disabled", false);
+        saveBtn.html(originalText).prop("disabled", false);
     }
 }
 
-// Validar datos de firma del acta
 function validateActaSignatureData() {
     if (!window.actaSignaturePad || window.actaSignaturePad.isEmpty()) {
         alert("Por favor dibuje su firma antes de continuar");
@@ -780,7 +733,14 @@ function validateActaSignatureData() {
     return true;
 }
 
-// Inicialización
+function getCSRFToken() {
+    var token = $('meta[name="csrf-token"]').attr("content");
+    if (!token) {
+        token = $('input[name="_token"]').val();
+    }
+    return token || "";
+}
+
 $(document).ready(function () {
     setTimeout(function () {
         checkActaDependencies();
