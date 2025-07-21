@@ -186,7 +186,6 @@ class AdminOrdersController extends \crocodicstudio\crudbooster\controllers\CBCo
 	        | $this->script_js = "function() { ... }";
 	        |
 	        */
-		// Este codigo javascript cuple la funcion de llenar automaticamente los clientes en el formulario//
 		$this->script_js = "
 $(document).ready(function(){
     $('#id_customer').on('change',function(){
@@ -285,24 +284,17 @@ $(document).ready(function(){
 		$this->load_css = array();
 	}
 
-	// functions php
-
-	//esta funcion crea el pdf de recepcion de equipos//  
 	public function equiposPDF($id)
 	{
-		// retreive all records from db
 		$data = DB::table('equipos')
 			->join('orders', 'orders.id_equipo', '=', 'equipos.id')
 			->join('customers', 'customers.id', '=', 'orders.id_customer')
 			->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
 			->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'orders.nombre_resp_recep', 'orders.id_resp_recep', 'orders.nombre_resp_cliente', 'orders.id_resp_cliente', 'customers.name as customer')->where('orders.id', $id)->get();
-		// share data to view
 		$pdf = PDF::loadView('equipos', compact('data'));
-		// download PDF file with download method
 		return $pdf->download('recepcion de equipos.pdf');
 	}
-
-	//esta funcion es la que trae la informacion del cliente y el ajax y javascript la procesa//        
+   
 	public function getInfo($id)
 	{
 		$fill = \DB::table('customers')
@@ -322,10 +314,7 @@ $(document).ready(function(){
 	    |
 	    */
 	public function actionButtonSelected($id_selected, $button_name)
-	{
-		//Your code here
-
-	}
+	{}
 
 
 	/*
@@ -399,9 +388,7 @@ $(document).ready(function(){
 	    |
 	    */
 	public function hook_row_index($column_index, &$column_value)
-	{
-		//Your code here
-	}
+	{}
 
 	/*
 	    | ---------------------------------------------------------------------- 
@@ -412,7 +399,6 @@ $(document).ready(function(){
 	    */
 	public function hook_before_add(&$postdata)
 	{
-		//agregar id del usuario
 		$postdata['id_usuario'] = CRUDBooster::myId();
 	}
 
@@ -424,10 +410,7 @@ $(document).ready(function(){
 	    | 
 	    */
 	public function hook_after_add($id)
-	{
-		//Your code here
-
-	}
+	{}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -438,10 +421,7 @@ $(document).ready(function(){
 	    | 
 	    */
 	public function hook_before_edit(&$postdata, $id)
-	{
-		//Your code here
-
-	}
+	{}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -451,10 +431,7 @@ $(document).ready(function(){
 	    | 
 	    */
 	public function hook_after_edit($id)
-	{
-		//Your code here 
-
-	}
+	{}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -465,17 +442,9 @@ $(document).ready(function(){
 	    */
 	public function hook_before_delete($id)
 	{
-		//Your code here
-		// Get the order data
 		$order = DB::table('orders')->where('id', $id)->first();
-
-		// Delete the order_id from the informes table
 		DB::table('informes')->where('order_id', $id)->delete();
-
-		// Delete the order_id from the actas table
 		DB::table('actas')->where('order_id', $id)->delete();
-
-		// Call the parent hook_before_delete function
 		parent::hook_before_delete($id);
 	}
 
@@ -487,15 +456,7 @@ $(document).ready(function(){
 	    | 
 	    */
 	public function hook_after_delete($id)
-	{
-		//Your code here
-
-	}
-
-	// ====================================================================
-	// MÉTODOS PARA FIRMA DIGITAL
-	// ====================================================================
-
+	{}
 	// public function viewPDF($id)
 	// {
 	// 	try {
@@ -510,8 +471,6 @@ $(document).ready(function(){
 	// 		if (!$data) {
 	// 			return abort(404, 'Orden no encontrada');
 	// 		}
-
-	// 		// ✅ VALIDACIÓN SIMPLE: Verificar si hay datos suficientes para PDF
 	// 		$hasContent = !empty($data->os_sarov) || !empty($data->customer) || !empty($data->placa) || !empty($data->tipo_equipo);
 
 	// 		if (!$hasContent) {
@@ -529,78 +488,70 @@ $(document).ready(function(){
 	// 		return abort(500, 'Error al cargar el documento');
 	// 	}
 	// }
-	
+
 	public function viewPDF($id)
-{
-    try {
-        // Configuración para evitar problemas
-        ini_set('memory_limit', '256M');
-        ini_set('max_execution_time', 60);
-        
-        $data = DB::table('equipos')
-            ->join('orders', 'orders.id_equipo', '=', 'equipos.id')
-            ->join('customers', 'customers.id', '=', 'orders.id_customer')
-            ->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
-            ->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'orders.nombre_resp_recep', 'orders.id_resp_recep', 'orders.nombre_resp_cliente', 'orders.id_resp_cliente', 'customers.name as customer', 'cms_users.name as responsable_sarov_name')
-            ->where('orders.id', $id)
-            ->first();
+	{
+		try {
+			// Configuración para evitar problemas
+			ini_set('memory_limit', '256M');
+			ini_set('max_execution_time', 60);
 
-        if (!$data) {
-            return abort(404, 'Orden no encontrada');
-        }
+			$data = DB::table('equipos')
+				->join('orders', 'orders.id_equipo', '=', 'equipos.id')
+				->join('customers', 'customers.id', '=', 'orders.id_customer')
+				->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
+				->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'orders.nombre_resp_recep', 'orders.id_resp_recep', 'orders.nombre_resp_cliente', 'orders.id_resp_cliente', 'customers.name as customer', 'cms_users.name as responsable_sarov_name')
+				->where('orders.id', $id)
+				->first();
 
-        // ✅ VALIDACIÓN CRÍTICA: Verificar datos suficientes
-        $hasContent = !empty($data->os_sarov) || !empty($data->customer) || !empty($data->placa) || !empty($data->tipo_equipo);
-        
-        if (!$hasContent) {
-            \Log::warning("Orden {$id} sin datos suficientes - omitiendo PDF en blanco");
-            return response()->view('pdf-error', [
-                'message' => 'Esta orden no tiene información suficiente para generar el PDF',
-                'orden_id' => $id
-            ], 400);
-        }
+			if (!$data) {
+				return abort(404, 'Orden no encontrada');
+			}
+			$hasContent = !empty($data->os_sarov) || !empty($data->customer) || !empty($data->placa) || !empty($data->tipo_equipo);
 
-        // ✅ Configurar DOMPDF para evitar páginas en blanco
-        $pdf = PDF::setOptions([
-            'isRemoteEnabled' => true,
-            'chroot' => public_path(),
-            'isHtml5ParserEnabled' => true,
-            'isPhpEnabled' => false,
-            'defaultFont' => 'DejaVu Sans',
-            'dpi' => 96,
-            'debugPng' => false,
-            'debugKeepTemp' => false,
-            'debugCss' => false,
-            'debugLayout' => false,
-            'isFontSubsettingEnabled' => false,
-        ]);
+			if (!$hasContent) {
+				\Log::warning("Orden {$id} sin datos suficientes - omitiendo PDF en blanco");
+				return response()->view('pdf-error', [
+					'message' => 'Esta orden no tiene información suficiente para generar el PDF',
+					'orden_id' => $id
+				], 400);
+			}
+			$pdf = PDF::setOptions([
+				'isRemoteEnabled' => true,
+				'chroot' => public_path(),
+				'isHtml5ParserEnabled' => true,
+				'isPhpEnabled' => false,
+				'defaultFont' => 'DejaVu Sans',
+				'dpi' => 96,
+				'debugPng' => false,
+				'debugKeepTemp' => false,
+				'debugCss' => false,
+				'debugLayout' => false,
+				'isFontSubsettingEnabled' => false,
+			]);
 
-        $pdf->loadView('equipos', compact('data'));
-        $pdf->setPaper('A4', 'portrait');
-        
-        // ✅ VALIDACIÓN POST-GENERACIÓN
-        $output = $pdf->output();
-        
-        // Verificar tamaño mínimo del PDF
-        if (strlen($output) < 3000) {
-            \Log::error("PDF muy pequeño generado para orden: {$id} - tamaño: " . strlen($output));
-            return response()->view('pdf-error', [
-                'message' => 'Error al generar PDF - documento muy pequeño',
-                'orden_id' => $id
-            ], 500);
-        }
+			$pdf->loadView('equipos', compact('data'));
+			$pdf->setPaper('A4', 'portrait');
+			$output = $pdf->output();
 
-        return $pdf->stream('recepcion-equipos-' . $id . '.pdf');
-        
-    } catch (\Exception $e) {
-        \Log::error('Error al mostrar PDF: ' . $e->getMessage());
-        return response()->view('pdf-error', [
-            'message' => 'Error al generar PDF: ' . $e->getMessage(),
-            'orden_id' => $id
-        ], 500);
-    }
-}
-	
+			if (strlen($output) < 3000) {
+				\Log::error("PDF muy pequeño generado para orden: {$id} - tamaño: " . strlen($output));
+				return response()->view('pdf-error', [
+					'message' => 'Error al generar PDF - documento muy pequeño',
+					'orden_id' => $id
+				], 500);
+			}
+
+			return $pdf->stream('recepcion-equipos-' . $id . '.pdf');
+		} catch (\Exception $e) {
+			\Log::error('Error al mostrar PDF: ' . $e->getMessage());
+			return response()->view('pdf-error', [
+				'message' => 'Error al generar PDF: ' . $e->getMessage(),
+				'orden_id' => $id
+			], 500);
+		}
+	}
+
 	public function saveSignature($id)
 	{
 		try {
@@ -663,7 +614,6 @@ $(document).ready(function(){
 		}
 	}
 
-	//By the way, you can still create your own method in here... :) 
 	public function getSignerInfo($id)
 	{
 		try {
@@ -693,6 +643,186 @@ $(document).ready(function(){
 				'success' => false,
 				'message' => 'Error: ' . $e->getMessage()
 			]);
+		}
+	}
+	public function getOrderPDF($id)
+	{
+		try {
+			$data = DB::table('equipos')
+				->join('orders', 'orders.id_equipo', '=', 'equipos.id')
+				->join('customers', 'customers.id', '=', 'orders.id_customer')
+				->join('cms_users', 'cms_users.id', '=', 'orders.id_usuario')
+				->select('orders.*', 'equipos.placa', 'equipos.tipo_equipo', 'equipos.descripcion', 'equipos.referencia', 'equipos.marca', 'equipos.modelo', 'equipos.linea', 'equipos.combustible', 'equipos.potencia', 'equipos.interno_equipo', 'equipos.numero_serie', 'orders.kms_hrs', 'orders.nombre_resp_recep', 'orders.id_resp_recep', 'orders.nombre_resp_cliente', 'orders.id_resp_cliente', 'customers.name as customer', 'cms_users.name as responsable_sarov_name')
+				->where('orders.id', $id)
+				->first();
+
+			if (!$data) {
+				return response()->json(['error' => 'Orden no encontrada'], 404);
+			}
+
+			$pdf = PDF::loadView('equipos', compact('data'));
+			$pdf->setPaper('A4', 'portrait');
+
+			return response($pdf->output(), 200, [
+				'Content-Type' => 'application/pdf',
+				'Content-Disposition' => 'inline; filename="order-' . $id . '.pdf"'
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al obtener PDF de orden: ' . $e->getMessage());
+			return response()->json(['error' => 'Error al cargar el PDF'], 500);
+		}
+	}
+
+	public function saveSignedOrderPDF($id)
+	{
+		try {
+			$input = Request::all();
+
+			if (!isset($input['pdf_data']) || empty($input['pdf_data'])) {
+				return response()->json([
+					'success' => false,
+					'message' => 'No se recibió el contenido del PDF firmado'
+				], 400);
+			}
+
+			$order = DB::table('orders')->where('id', $id)->first();
+			if (!$order) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Orden no encontrada'
+				], 404);
+			}
+
+			$pdfBase64 = $input['pdf_data'];
+
+			$pdfBinaryData = base64_decode($pdfBase64, true);
+			if (!$pdfBinaryData) {
+				return response()->json([
+					'success' => false,
+					'message' => 'Datos del PDF inválidos - base64 corrupto'
+				], 400);
+			}
+
+			if (substr($pdfBinaryData, 0, 4) !== '%PDF') {
+				return response()->json([
+					'success' => false,
+					'message' => 'El archivo no es un PDF válido'
+				], 400);
+			}
+
+			$fileName = 'reception_signed_' . $id . '_' . date('Y-m-d_H-i-s') . '.pdf';
+			$fileSize = strlen($pdfBinaryData);
+
+			$existingRecord = DB::table('service_order_documents')->where('order_id', $id)->first();
+
+			if ($existingRecord) {
+				$updated = DB::table('service_order_documents')
+					->where('order_id', $id)
+					->update([
+						'reception_signed' => $pdfBase64,
+						'reception_filename' => $fileName,
+						'reception_size' => $fileSize,
+						'reception_signed_at' => now(),
+						'updated_at' => now()
+					]);
+			} else {
+				// Crear nuevo registro
+				$updated = DB::table('service_order_documents')->insert([
+					'order_id' => $id,
+					'reception_signed' => $pdfBase64,
+					'reception_filename' => $fileName,
+					'reception_size' => $fileSize,
+					'reception_signed_at' => now(),
+					'delivery_signed' => null, 
+					'delivery_filename' => null,
+					'delivery_size' => null,
+					'delivery_signed_at' => null,
+					'created_at' => now(),
+					'updated_at' => now()
+				]);
+			}
+
+			if (!$updated) {
+				throw new \Exception('No se pudo guardar el documento en la base de datos');
+			}
+
+			\Log::info("Documento de recepción firmado guardado como base64 para orden {$id}", [
+				'filename' => $fileName,
+				'size_bytes' => $fileSize,
+				'base64_length' => strlen($pdfBase64),
+				'timestamp' => now()->format('Y-m-d H:i:s')
+			]);
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Documento de recepción firmado guardado correctamente en la base de datos',
+				'data' => [
+					'order_id' => $id,
+					'filename' => $fileName,
+					'size' => $fileSize,
+					'document_type' => 'reception',
+					'storage_type' => 'base64_database',
+					'saved_at' => now()->format('Y-m-d H:i:s'),
+					'next_step' => 'El acta de entrega se firmará más tarde'
+				]
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al guardar PDF de recepción firmado como base64: ' . $e->getMessage());
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Error al guardar documento: ' . $e->getMessage()
+			], 500);
+		}
+	}
+
+	public function downloadDocumentPDF($order_id, $type)
+	{
+		try {
+			if (!in_array($type, ['reception', 'delivery'])) {
+				return response()->json(['error' => 'Tipo de documento inválido'], 400);
+			}
+			$document = DB::table('service_order_documents')
+				->where('order_id', $order_id)
+				->first();
+
+			if (!$document) {
+				return response()->json(['error' => 'Documento no encontrado'], 404);
+			}
+			if ($type === 'reception') {
+				$pdfBase64 = $document->reception_signed;
+				$filename = $document->reception_filename ?: 'reception_signed_' . $order_id . '.pdf';
+			} else {
+				$pdfBase64 = $document->delivery_signed;
+				$filename = $document->delivery_filename ?: 'delivery_signed_' . $order_id . '.pdf';
+			}
+
+			if (!$pdfBase64) {
+				return response()->json(['error' => 'Documento no disponible'], 404);
+			}
+
+			$pdfData = base64_decode($pdfBase64);
+			if (!$pdfData) {
+				\Log::error("Error al decodificar base64 para documento {$type} de orden {$order_id}");
+				return response()->json(['error' => 'Error al decodificar documento'], 500);
+			}
+
+			if (substr($pdfData, 0, 4) !== '%PDF') {
+				\Log::error("Datos inválidos para documento {$type} de orden {$order_id} - no es PDF");
+				return response()->json(['error' => 'Documento corrupto'], 500);
+			}
+
+			return response($pdfData, 200, [
+				'Content-Type' => 'application/pdf',
+				'Content-Disposition' => 'inline; filename="' . $filename . '"',
+				'Content-Length' => strlen($pdfData),
+				'Cache-Control' => 'no-cache, no-store, must-revalidate',
+				'Pragma' => 'no-cache',
+				'Expires' => '0'
+			]);
+		} catch (\Exception $e) {
+			\Log::error('Error al servir PDF desde base64: ' . $e->getMessage());
+			return response()->json(['error' => 'Error interno del servidor'], 500);
 		}
 	}
 }
