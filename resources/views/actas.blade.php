@@ -79,23 +79,26 @@
                     </table>
                 </td>
             </tr>
-            <tr class="heading">
-                <td colspan="3" align="center"><b>OBSERVACIONES</b></td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <table>
-                        <tr>
-                            <td>
-                                <b> Observaciones: </b>
-                                {{$reportdata->observacion}}
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+            <table style="page-break-before: always; height: 80px;">
+                <tr class="heading">
+                    <td colspan="3" align="center"><b>OBSERVACIONES</b></td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <table>
+                            <tr>
+                                <td>
+                                    <b> Observaciones: </b>
+                                    {{$reportdata->observacion}}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </table>
-        <table>
+
+        <table style="page-break-before: always; height: 80px;">
             <tr>
                 <td width="50%">
                     <b style="background-color: #ffc000;">QUIEN ENTREGA:</b>

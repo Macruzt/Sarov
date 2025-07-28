@@ -626,7 +626,7 @@ async function downloadSignedPDF(orderId) {
         var existingPdfBytes = await response.arrayBuffer();
         var pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         var pages = pdfDoc.getPages();
-        var firstPage = pages[1];
+        var firstPage = pages[2];
         var pageSize = firstPage.getSize();
         var width = pageSize.width;
         var height = pageSize.height;
@@ -641,8 +641,8 @@ async function downloadSignedPDF(orderId) {
 
         var signatureWidth = 100;
         var signatureHeight = 40;
-        var recepcionX = 80;
-        var recepcionY = 650;
+        var recepcionX = 90;
+        var recepcionY = 610;
 
         firstPage.drawImage(recepcionImage, {
             x: recepcionX,
@@ -652,7 +652,7 @@ async function downloadSignedPDF(orderId) {
         });
 
         var clienteX = 90; 
-        var clienteY = 450;
+        var clienteY = 412;
 
         firstPage.drawImage(clienteImage, {
             x: clienteX,

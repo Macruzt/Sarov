@@ -633,7 +633,7 @@ async function downloadSignedActaPDF(actaId) {
         var existingPdfBytes = await response.arrayBuffer();
         var pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         var pages = pdfDoc.getPages();
-        var firstPage = pages[1];
+        var firstPage = pages[2];
         var pageSize = firstPage.getSize();
         var width = pageSize.width;
         var height = pageSize.height;
