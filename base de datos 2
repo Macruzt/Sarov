@@ -1,0 +1,69 @@
+-- Script SQL para actualizar las URLs del menú CrudBooster de servidor a localhost
+
+-- 1. Actualizar URLs específicas una por una para mayor precisión
+
+-- ID 17: Agregar Cliente
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/customers/add' 
+WHERE `id` = 17;
+
+-- ID 18: Listado de Clientes  
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/customers' 
+WHERE `id` = 18;
+
+-- ID 33: Agregar Cliente (gestionsarov)
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/customers/add?return_url=http%3A%2F%2Flocalhost%3A8000%2Fadmin%2Fcustomers&parent_id=&parent_field=' 
+WHERE `id` = 33;
+
+-- ID 34: Listado de Clientes (gestionsarov)
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/customers' 
+WHERE `id` = 34;
+
+-- ID 35: Listado de Vehículos/Equipos
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/equipos' 
+WHERE `id` = 35;
+
+-- ID 36: Agregar Vehiculos/Equipos
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/equipos/add?return_url=http%3A%2F%2Flocalhost%3A8000%2Fadmin%2Fequipos&parent_id=&parent_field=' 
+WHERE `id` = 36;
+
+-- ID 37: Listado de Archivos
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/files' 
+WHERE `id` = 37;
+
+-- ID 38: Agregar Carpeta
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/folders/add?return_url=http%3A%2F%2Flocalhost%3A8000%2Fadmin%2Ffolders&parent_id=&parent_field=' 
+WHERE `id` = 38;
+
+-- ID 40: Listado de Carpetas
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/folders' 
+WHERE `id` = 40;
+
+-- ID 41: Agregar Archivos
+UPDATE `cms_menus` 
+SET `path` = 'http://localhost:8000/admin/files/add?return_url=http%3A%2F%2Flocalhost%3A8000%2Fadmin%2Ffiles&parent_id=&parent_field=' 
+WHERE `id` = 41;
+
+-- 2. Script alternativo usando REPLACE (más rápido pero menos específico)
+-- Descomenta estas líneas si prefieres el método automático:
+
+/*
+UPDATE `cms_menus` 
+SET `path` = REPLACE(`path`, 'https://gestionsarov.cloud/public', 'http://localhost:8000') 
+WHERE `path` LIKE '%gestionsarov.cloud%';
+
+UPDATE `cms_menus` 
+SET `path` = REPLACE(`path`, 'https://tuzonacomercial.com/sarov/public', 'http://localhost:8000') 
+WHERE `path` LIKE '%tuzonacomercial.com%';
+*/
+
+-- 3. Verificar los cambios
+SELECT id, name, path FROM `cms_menus` WHERE `type` = 'URL' ORDER BY id;
