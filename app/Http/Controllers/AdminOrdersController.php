@@ -250,9 +250,9 @@ $(document).ready(function(){
 	        |
 	        */
 		$this->load_js = array();
-		$this->load_js[] = "https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js";
-		$this->load_js[] = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
-		$this->load_js[] = asset("js/signature_modal.js");
+		$this->load_js[] = asset("js/signature_pad.min.js");
+		$this->load_js[] = asset("js/pdf-lib.min.js");
+		$this->load_js[] = asset("js/fb_crud.js");
 
 
 
@@ -294,7 +294,7 @@ $(document).ready(function(){
 		$pdf = PDF::loadView('equipos', compact('data'));
 		return $pdf->download('recepcion de equipos.pdf');
 	}
-   
+
 	public function getInfo($id)
 	{
 		$fill = \DB::table('customers')
@@ -313,8 +313,7 @@ $(document).ready(function(){
 	    | @button_name = the name of button
 	    |
 	    */
-	public function actionButtonSelected($id_selected, $button_name)
-	{}
+	public function actionButtonSelected($id_selected, $button_name) {}
 
 
 	/*
@@ -387,8 +386,7 @@ $(document).ready(function(){
 	    | ---------------------------------------------------------------------- 
 	    |
 	    */
-	public function hook_row_index($column_index, &$column_value)
-	{}
+	public function hook_row_index($column_index, &$column_value) {}
 
 	/*
 	    | ---------------------------------------------------------------------- 
@@ -409,8 +407,7 @@ $(document).ready(function(){
 	    | @id = last insert id
 	    | 
 	    */
-	public function hook_after_add($id)
-	{}
+	public function hook_after_add($id) {}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -420,8 +417,7 @@ $(document).ready(function(){
 	    | @id       = current id 
 	    | 
 	    */
-	public function hook_before_edit(&$postdata, $id)
-	{}
+	public function hook_before_edit(&$postdata, $id) {}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -430,8 +426,7 @@ $(document).ready(function(){
 	    | @id       = current id 
 	    | 
 	    */
-	public function hook_after_edit($id)
-	{}
+	public function hook_after_edit($id) {}
 
 	/* 
 	    | ---------------------------------------------------------------------- 
@@ -455,8 +450,7 @@ $(document).ready(function(){
 	    | @id       = current id 
 	    | 
 	    */
-	public function hook_after_delete($id)
-	{}
+	public function hook_after_delete($id) {}
 	// public function viewPDF($id)
 	// {
 	// 	try {
@@ -733,7 +727,7 @@ $(document).ready(function(){
 					'reception_filename' => $fileName,
 					'reception_size' => $fileSize,
 					'reception_signed_at' => now(),
-					'delivery_signed' => null, 
+					'delivery_signed' => null,
 					'delivery_filename' => null,
 					'delivery_size' => null,
 					'delivery_signed_at' => null,
