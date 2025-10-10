@@ -34,7 +34,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    /*public function boot()
     {
         $this->configureRateLimiting();
 
@@ -48,8 +48,27 @@ class RouteServiceProvider extends ServiceProvider
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
         });
-    }
+    }*/
+    public function boot()
+{
+    $this->configureRateLimiting();
 
+    $this->routes(function () {
+        Route::prefix('api')
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api.php'));
+
+        Route::middleware('web')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/web.php'));
+        
+        // ⭐ AGREGAR ESTA LÍNEA - Registrar rutas Java
+        Route::middleware('web')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/routes_Java/web_Java.php'));
+    });
+}
     /**
      * Configure the rate limiters for the application.
      *
@@ -60,5 +79,5 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
-    }
+    } 
 }

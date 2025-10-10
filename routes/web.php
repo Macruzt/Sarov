@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminFiles1Controller;
 use App\Http\Controllers\AdminActasController;
 use App\Http\Controllers\AdminDocumentsController;
 use App\Http\Controllers\FirestoreUsersController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,8 +29,8 @@ Route::get('/', function () {
 // FIRESTORE - Rutas para usuarios de Firestore
 // ====================================================================
 
-Route::get('/admin/firestoreusers', [FirestoreUsersController::class, 'getData']);
-Route::get('/userslist', 'FirestoreController@users');
+//Route::get('/admin/firestoreusers', [FirestoreUsersController::class, 'getData']);
+//Route::get('/userslist', 'FirestoreController@users');
 
 // ====================================================================
 // ORDERS - Rutas para órdenes y equipos
@@ -162,3 +163,19 @@ Route::get('admin/documents/get-order-documents/{order_id}', 'AdminDocumentsCont
 Route::get('admin/orders/download-document/{order_id}/{type}', 'AdminOrdersController@downloadDocumentPDF');
 Route::post('admin/actas/{id}/save-signed-pdf', 'AdminActasController@saveSignedActaPDF');
 Route::get('admin/actas/{id}/get-pdf', 'AdminActasController@getActaPDF');
+
+/*Se agrega ruta de php y java
+
+
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+*/
+//para revisar el producto
+
+use App\Http\Controllers\SupplierController;
+
+Route::prefix('admin')->group(function () {
+    // Tus rutas existentes...
+    Route::get('/suppliers', [SupplierController::class, 'index'])->name('admin.suppliers.index');
+});

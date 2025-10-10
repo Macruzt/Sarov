@@ -41,4 +41,11 @@ return [
     'measurement_id' => 'G-BTYJ51MN21',
 ], 
 
+'java_api' => [
+    'url' => env('JAVA_API_URL', 'http://localhost:8081/api'),
+    'timeout' => env('JAVA_API_TIMEOUT', 30),
+],
+
 ];
+
+
